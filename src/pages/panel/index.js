@@ -1,9 +1,11 @@
 import Vue from 'vue'
 import { showDlg } from 'boot/utils'
 
+import OperatePanel from './OperatePanel.vue'
+
 // 浮动面板表
 export const FLOAT_PANEL = {
-  // xxx: XxxPanel,
+  operate: OperatePanel
 }
 
 // 浮动面板名称列表
@@ -11,7 +13,13 @@ export const FLOAT_PANEL_NAMES = Object.keys(FLOAT_PANEL)
 
 // 浮动面板自定义参数
 const FLOAT_PANEL_PARAMS = {
-  // xxx: {}
+  operate: {
+    cardStyle: {
+      backgroundColor: '#09f3',
+      border: 'solid 1px #1976d2cc',
+      backdropFilter: 'blur(6px)'
+    }
+  }
 }
 
 // 显示浮动面板

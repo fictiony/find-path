@@ -1,7 +1,6 @@
 <template>
   <q-btn
     ref="btn"
-    flat
     :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2 text-primary'"
     style="height: 34px"
     :label="computedLabel"
@@ -11,7 +10,8 @@
     @click="onClick"
   >
     <q-tooltip max-width="400px" anchor="top middle" self="bottom middle" v-if="tips">
-      <q-markdown :src="tips" />
+      <q-markdown :src="tips" v-if="mdTips" />
+      <template v-else>{{ tips }}</template>
     </q-tooltip>
   </q-btn>
 </template>
@@ -29,6 +29,7 @@ export default {
     label: [String, Function], // 按钮标签，为函数时格式为：关联数据 => 按钮标签
     icon: [String, Function], // 按钮图标，为函数时格式为：关联数据 => 按钮图标
     tips: String, // 提示说明文字
+    mdTips: Boolean, // 提示是否采用Markdown格式
     shortcut: String, // 快捷键
     keyScope: {
       // 快捷键作用域

@@ -3,7 +3,8 @@
     <label class="q-mr-sm" :class="labelClass" :style="combineLabelStyle" v-if="label">
       {{ label }}
       <q-tooltip max-width="400px" anchor="top left" self="top right" v-if="tips">
-        <q-markdown :src="tips" />
+        <q-markdown :src="tips" v-if="mdTips" />
+        <template v-else>{{ tips }}</template>
       </q-tooltip>
     </label>
     <component ref="ctrl" :is="component" :class="ctrlClass" :style="combineCtrlStyle" v-bind="$attrs" v-on="$listeners" />
@@ -22,6 +23,7 @@ export default {
     labelStyle: Object,
     labelWidth: Number, // 左侧文字标签宽度
     tips: String, // 提示说明文字
+    mdTips: Boolean, // 提示是否采用Markdown格式
     component: {
       // 控件所用组件（可为已注册的组件名、组件定义或组件类）
       required: true

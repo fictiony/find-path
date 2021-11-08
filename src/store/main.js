@@ -7,10 +7,11 @@ import cfg from '../../package.json'
 const UI_STATE_INIT = {
   maximized: false, // 窗口是否最大化
   darkTheme: false, // 是否暗色界面
-  // xxxPanel: true, // xxx面板是否显示
+  operatePanel: true, // 操作面板是否显示
   // xxxPanelFloat: false, // xxx面板是否浮动
-  // xxxPanelFold: false, // xxx面板是否收拢
-  // xxxPanelRect: { x: 100, y: 100, width: 350, height: 400 }, // xxx面板位置大小
+  operatePanelFold: false, // 操作面板是否收拢
+  operatePanelRect: { x: 100, y: 100, width: 350, height: 400 }, // 操作面板位置大小
+  viewZoom: 1.0, // 视图缩放比率
   uiZoom: 1.0 // 界面缩放比率
 }
 const UI_STATE = Object.keys(UI_STATE_INIT)
@@ -26,17 +27,28 @@ const state = () => ({
   appAuthor: cfg.author, // 应用作者
   loading: false, // 是否显示加载等待（可为：true/false/提示信息）
 
-  ...UI_STATE_INIT
+  ...UI_STATE_INIT,
+  operatePanelFloat: true // 操作面板始终浮动
 })
 
 // ----------------------------------------------------------------------------【getters】
 const getters = {
-  // UI最大缩放比率
+  // 视图最大缩放比率
+  maxViewZoom (state) {
+    return 2.0
+  },
+
+  // 视图最小缩放比率
+  minViewZoom (state) {
+    return 0.05
+  },
+
+  // 界面最大缩放比率
   maxUIZoom (state) {
     return 2.0
   },
 
-  // UI最小缩放比率
+  // 界面最小缩放比率
   minUIZoom (state) {
     return 0.5
   }
@@ -72,6 +84,20 @@ const actions = {
     UI_STATE.forEach(name => {
       commit(name, UI_STATE_INIT[name])
     })
+  },
+
+  // 缩放视图
+  // - @zoom 新缩放比率
+  async zoomView ({ getters, commit }, zoom) {
+    zoom = Math.min(getters.maxViewZoom, Math.max(getters.minViewZoom, zoom))
+    commit('viewZoom', zoom)
+  },
+
+  // 缩放界面
+  // - @zoom 新缩放比率
+  async zoomUI ({ getters, commit }, zoom) {
+    zoom = Math.min(getters.maxUIZoom, Math.max(getters.minUIZoom, zoom))
+    commit('uiZoom', zoom)
   }
 }
 

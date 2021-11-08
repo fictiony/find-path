@@ -36,7 +36,7 @@
       <template v-if="okBtn || yesBtn || noBtn || cancelBtn">
         <q-separator />
         <q-card-actions class="q-px-md" align="right">
-          <CommonForm :form="actionForm" :input-params="{ t: 'btn', style: 'min-width: 90px' }" />
+          <CommonForm :form="actionForm" :input-params="{ t: 'btn', style: 'min-width: 90px', flat: true }" />
         </q-card-actions>
       </template>
 

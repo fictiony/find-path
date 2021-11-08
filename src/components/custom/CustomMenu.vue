@@ -6,8 +6,7 @@
           :key="index"
           clickable
           :disable="getItemProp(item, 'disable')"
-          v-close-popup="getItemProp(item, 'disable') ? 0 : -1"
-          @click="item.handler && item.handler()"
+          @click="item.handler && ($refs.menu.hide() || item.handler())"
           v-if="item"
         >
           <q-item-section avatar class="_icon" v-if="items.find(i => i && i.icon)">
@@ -65,6 +64,7 @@ export default {
         const keyScope = this.getItemProp(item, 'keyScope') || this.keyScope
         key(shortcut, keyScope, () => {
           if (item.handler && !this.getItemProp(item, 'disable')) {
+            this.$refs.menu.hide()
             item.handler()
           }
           return false // 始终屏蔽系统热键

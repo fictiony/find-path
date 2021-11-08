@@ -38,7 +38,7 @@ import { Stats } from 'three-stats'
 
 // 浮动面板
 const FLOAT_PANELS = {
-  // xxx: ''
+  operatePanel: '操作面板'
 }
 
 export default {
@@ -56,6 +56,28 @@ export default {
             handler: () => (vm[name] = !vm[name])
           }
       ),
+      null,
+      {
+        label: '放大视图',
+        icon: 'zoom_in',
+        shortcut: 'Ctrl+=',
+        handler: () => vm.zoomView(vm.viewZoom * Math.SQRT2),
+        disable: () => vm.viewZoom >= vm.maxViewZoom
+      },
+      {
+        label: '缩小视图',
+        icon: 'zoom_out',
+        shortcut: 'Ctrl+-',
+        handler: () => vm.zoomView(vm.viewZoom * Math.SQRT1_2),
+        disable: () => vm.viewZoom <= vm.minViewZoom
+      },
+      {
+        label: '视图恢复1:1缩放',
+        icon: '1x_mobiledata',
+        shortcut: 'Ctrl+0',
+        handler: () => vm.zoomView(1),
+        disable: () => vm.viewZoom === 1
+      },
       null,
       {
         label: '放大界面',
@@ -119,10 +141,9 @@ export default {
   }),
 
   computed: {
-    ...mapState('main', ['appTitle', 'loading', 'maximized']),
-    ...mapStateRW('main', ['darkTheme', 'uiZoom']),
-    ...mapStateRW('main', [...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
-    ...mapGetters('main', ['maxUIZoom', 'minUIZoom'])
+    ...mapState('main', ['appTitle', 'loading', 'maximized', 'viewZoom', 'uiZoom']),
+    ...mapStateRW('main', ['darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
+    ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom'])
   },
 
   watch: {
@@ -140,7 +161,7 @@ export default {
   },
 
   methods: {
-    ...mapActions('main', ['resetUIState']),
+    ...mapActions('main', ['resetUIState', 'zoomView', 'zoomUI']),
 
     // 鼠标滑过菜单自动弹出
     hoverMenu(name) {
@@ -163,12 +184,6 @@ export default {
     // 退出
     quit() {
       this.$appCall('quit')
-    },
-
-    // 缩放界面
-    // - @zoom 新缩放比率
-    zoomUI(zoom) {
-      this.uiZoom = Math.min(this.maxUIZoom, Math.max(this.minUIZoom, zoom))
     },
 
     // 重置UI布局
