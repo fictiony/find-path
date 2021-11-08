@@ -24,7 +24,7 @@ const state = () => ({
   appVer: cfg.version, // 应用版本号
   appDesc: cfg.description, // 应用介绍
   appAuthor: cfg.author, // 应用作者
-  loading: false, // 是否显示加载等待（可为：true/false/
+  loading: false, // 是否显示加载等待（可为：true/false/提示信息）
 
   ...UI_STATE_INIT
 })
@@ -44,6 +44,7 @@ const getters = {
 
 // ----------------------------------------------------------------------------【mutations】
 const mutations = {
+  ...genMutations(['loading']),
   ...genMutations(
     UI_STATE,
     debounce((name, val, state) => {

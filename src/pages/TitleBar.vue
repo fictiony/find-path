@@ -120,7 +120,8 @@ export default {
 
   computed: {
     ...mapState('main', ['appTitle', 'loading', 'maximized']),
-    ...mapStateRW('main', [...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i]), 'darkTheme', 'uiZoom']),
+    ...mapStateRW('main', ['darkTheme', 'uiZoom']),
+    ...mapStateRW('main', [...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
     ...mapGetters('main', ['maxUIZoom', 'minUIZoom'])
   },
 
