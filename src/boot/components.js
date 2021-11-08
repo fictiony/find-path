@@ -2,7 +2,10 @@ import Vue from 'vue'
 
 // 第三方组件
 // import { QEditableTd, QSelectableTd } from 'components/thirdparty/qmodeltd'
-// import { MySplitter, MyDrawer } from 'components/thirdparty/plus'
+import {
+  // MySplitter,
+  MyDrawer
+} from 'components/thirdparty/plus'
 // import QLayoutNoScroll from 'components/thirdparty/QLayoutNoScroll'
 
 // 自定义组件
@@ -16,9 +19,9 @@ import {
   // CommonArray,
   CommonBtn,
   // CommonCtrl,
-  CommonInput
+  CommonInput,
   // TextInput,
-  // NumInput,
+  NumInput
   // FileInput
 } from 'components/custom/form'
 
@@ -29,7 +32,7 @@ const components = {
   // QEditableTd,
   // QSelectableTd,
   // MySplitter,
-  // MyDrawer,
+  MyDrawer,
   // QLayoutNoScroll,
 
   CustomMenu,
@@ -42,9 +45,9 @@ const components = {
   // CommonArray,
   CommonBtn,
   // CommonCtrl,
-  CommonInput
+  CommonInput,
   // TextInput,
-  // NumInput,
+  NumInput
   // FileInput,
 }
 Object.keys(components).forEach(name => {

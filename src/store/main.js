@@ -8,7 +8,7 @@ const UI_STATE_INIT = {
   maximized: false, // 窗口是否最大化
   darkTheme: false, // 是否暗色界面
   operatePanel: true, // 操作面板是否显示
-  // xxxPanelFloat: false, // xxx面板是否浮动
+  operatePanelFloat: true, // 操作面板是否浮动
   operatePanelFold: false, // 操作面板是否收拢
   operatePanelRect: { x: 100, y: 100, width: 350, height: 400 }, // 操作面板位置大小
   viewZoom: 1.0, // 视图缩放比率
@@ -27,8 +27,7 @@ const state = () => ({
   appAuthor: cfg.author, // 应用作者
   loading: false, // 是否显示加载等待（可为：true/false/提示信息）
 
-  ...UI_STATE_INIT,
-  operatePanelFloat: true // 操作面板始终浮动
+  ...UI_STATE_INIT
 })
 
 // ----------------------------------------------------------------------------【getters】

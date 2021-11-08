@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 
 import main from './main'
+import edit from './edit'
 
 Vue.use(Vuex)
 
@@ -17,7 +18,8 @@ Vue.use(Vuex)
 export default function (/* { ssrContext } */) {
   const Store = new Vuex.Store({
     modules: {
-      main
+      main,
+      edit
     },
     plugins: [], // 关闭开发模式下的state整体备份（会造成卡顿）
 

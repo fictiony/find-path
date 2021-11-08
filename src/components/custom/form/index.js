@@ -5,7 +5,7 @@ import CommonBtn from './CommonBtn.vue'
 // import CommonCtrl from './CommonCtrl.vue'
 import CommonInput from './CommonInput.vue'
 // import TextInput from './TextInput.vue'
-// import NumInput from './NumInput.vue'
+import NumInput from './NumInput.vue'
 // import FileInput from './FileInput.vue'
 
 export {
@@ -14,9 +14,9 @@ export {
   // CommonArray,
   CommonBtn,
   // CommonCtrl,
-  CommonInput
+  CommonInput,
   // TextInput,
-  // NumInput,
+  NumInput
   // FileInput
 }
 
@@ -28,7 +28,7 @@ export const INPUT = {
   btn: CommonBtn,
   // ctrl: CommonCtrl,
   // text: TextInput,
-  // num: NumInput,
+  num: NumInput,
   // file: FileInput,
   default: CommonInput
 }

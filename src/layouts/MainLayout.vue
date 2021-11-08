@@ -9,6 +9,18 @@
         <router-view />
       </q-page>
     </q-page-container>
+
+    <my-drawer
+      side="right"
+      behavior="desktop"
+      elevated
+      :limits="[300, 500]"
+      :value="true"
+      :width.sync="operatePanelRect.width"
+      v-if="operatePanelShow"
+    >
+      <router-view name="operate" />
+    </my-drawer>
   </q-layout>
 </template>
 
@@ -19,7 +31,7 @@ import { FLOAT_PANEL_NAMES, showFloatPanel } from 'pages/panel'
 
 export default {
   computed: {
-    ...mapState('main', ['maximized', 'uiZoom']),
+    ...mapState('main', ['maximized', 'uiZoom', 'operatePanelRect']),
     ...mapState('main', [...FLOAT_PANEL_NAMES.map(i => i + 'Panel'), ...FLOAT_PANEL_NAMES.map(i => i + 'PanelFloat')]),
     ...FLOAT_PANEL_NAMES.map(i => [i + 'PanelShow', vm => vm[i + 'Panel'] && !vm[i + 'PanelFloat']]).toMap(0, i => i[1]),
     ...FLOAT_PANEL_NAMES.map(i => [i + 'PanelFloatShow', vm => vm[i + 'Panel'] && vm[i + 'PanelFloat']]).toMap(0, i => i[1])

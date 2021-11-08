@@ -9,6 +9,7 @@
               :ref="field"
               :is="getInput(def.t || inputParams.t)"
               :value="value[field]"
+              :auto-save="autoSave"
               v-bind="getCombineParams(def)"
               v-on="{ ...$listeners, input: () => {} }"
               @input="onInput(def, field, $event)"

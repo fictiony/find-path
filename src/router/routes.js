@@ -7,8 +7,17 @@ const routes = [
         path: '',
         components: {
           default: () => import('pages/Index.vue'),
-          title: () => import('pages/TitleBar.vue')
-        }
+          title: () => import('pages/TitleBar.vue'),
+          operate: () => import('pages/panel/OperatePanel.vue')
+        },
+        children: [
+          {
+            path: '',
+            components: {
+              grid: () => import('pages/GridView.vue')
+            }
+          }
+        ]
       }
     ]
   },
