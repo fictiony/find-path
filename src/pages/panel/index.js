@@ -14,10 +14,10 @@ export const FLOAT_PANEL_NAMES = Object.keys(FLOAT_PANEL)
 // 浮动面板自定义参数
 const FLOAT_PANEL_PARAMS = {
   operate: {
+    minWidth: 180,
     maxWidth: 500,
     cardStyle: {
-      backgroundColor: '#09f5',
-      border: 'solid 1px #1976d2cc',
+      backgroundColor: '#0000',
       backdropFilter: 'blur(6px)'
     }
   }

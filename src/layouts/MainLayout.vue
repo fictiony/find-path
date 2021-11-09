@@ -14,7 +14,7 @@
       side="right"
       behavior="desktop"
       elevated
-      :limits="[300, 500]"
+      :limits="[180, 500]"
       :value="true"
       :width.sync="operatePanelRect.width"
       v-if="operatePanelShow"

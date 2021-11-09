@@ -1,6 +1,9 @@
 import Vue from 'vue'
 
 // 第三方组件
+// import Plugin from '@quasar/quasar-ui-qmarkdown'
+// import '@quasar/quasar-ui-qmarkdown/dist/index.css'
+// Vue.use(Plugin)
 // import { QEditableTd, QSelectableTd } from 'components/thirdparty/qmodeltd'
 import {
   // MySplitter,

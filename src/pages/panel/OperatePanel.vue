@@ -1,5 +1,5 @@
 <template>
-  <FloatPanel title="操作面板" state="operatePanel">
+  <FloatPanel title="操作面板" state="operatePanel" :style="{ backgroundColor: $q.dark.isActive ? '#0006' : '#fff6' }">
     <q-scroll-area class="fit column q-px-sm q-py-xs">
       <CommonForm class="q-pa-sm" :form="form" :value="_self" auto-save :input-params="inputParams" @input="onInput" />
     </q-scroll-area>
@@ -25,8 +25,8 @@ export default {
     inputParams: {
       t: 'btn',
       glossy: true,
-      outlined: true,
-      standout: true
+      standout: true,
+      qInputStyle: { marginTop: '2px', marginBottom: '2px' }
     }
   }),
 

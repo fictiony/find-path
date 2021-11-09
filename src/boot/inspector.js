@@ -1,5 +1,8 @@
 // 【组件监视器】
 import Vue from 'vue'
+import Plugin from '@quasar/quasar-ui-qmarkdown'
+import '@quasar/quasar-ui-qmarkdown/dist/index.css'
+Vue.use(Plugin)
 import { inspect, PropPanel } from 'components/thirdparty/inspect'
 import { showDlg } from 'boot/utils'
 
@@ -81,3 +84,80 @@ export function traceProps (obj = this, ...onlyTypes) {
     })
 }
 Vue.prototype.$traceProps = traceProps
+
+// 监视Vue组件渲染
+// - @filter 组件名筛选（可为字符串、RegExp或 数组，'*'表示监视所有组件，空表示取消监视）
+// - @watcher 监视函数（默认为console.log），参数为组件名称
+let oldRender = null
+let watchRenderFilter = ''
+let renderWatcher = null
+export function watchRender (filter = '*', watcher = console.log) {
+  watchRenderFilter = filter
+  renderWatcher = watcher
+  if (oldRender) {
+    if (filter) return
+    Vue.prototype._render = oldRender
+    oldRender = null
+  } else {
+    if (!filter) return
+    oldRender = Vue.prototype._render
+    Vue.prototype._render = function () {
+      if (watchingVue(this)) {
+        renderWatcher(vueName(this))
+      }
+      return oldRender.call(this)
+    }
+  }
+}
+Vue.prototype.$watchRender = watchRender
+
+// 判断Vue组件是否要监视
+function watchingVue (component) {
+  if (watchRenderFilter === '*') return true
+  const name = vueName(component)
+  if (typeof watchRenderFilter === 'string') return watchRenderFilter === name
+  if (watchRenderFilter instanceof RegExp) return watchRenderFilter.test(name)
+  if (watchRenderFilter instanceof Array) {
+    return (
+      watchRenderFilter.findIndex(i => {
+        if (typeof i === 'string') return i === name
+        if (i instanceof RegExp) return i.test(name)
+        return false
+      }) >= 0
+    )
+  }
+  return false
+}
+
+// 获取Vue组件名称
+function vueName (component) {
+  const options = component.$options
+  return (
+    options.name ||
+    options._componentTag ||
+    `<${options.__file || 'Anonymous Component'}>`
+  )
+}
+
+// 统计Vue组件渲染次数
+// - @filter 同上
+// - @delay 打印间隔（毫秒）
+export function statRender (filter = '*', delay = 1000) {
+  if (filter) {
+    let stat = {}
+    let timeout = null
+    watchRender(filter, name => {
+      stat[name] = (stat[name] || 0) + 1
+      if (timeout == null) {
+        timeout = setTimeout(() => {
+          Object.keys(stat).forEach(i => console.log(i, '=', stat[i]))
+          stat = {}
+          timeout = null
+        }, delay)
+      }
+    })
+  } else {
+    watchRender()
+  }
+}
+Vue.prototype.$statRender = statRender

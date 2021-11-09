@@ -105,14 +105,14 @@ td.q-space {
     }
     &__control {
       padding: 0px 8px;
-      height: 34px;
+      height: 30px;
       &-container {
         padding: 0px;
       }
     }
     &__marginal {
       padding: 0px 2px;
-      height: 34px;
+      height: 30px;
     }
     &--standout.q-field--highlighted {
       .q-field__control {
@@ -129,6 +129,6 @@ td.q-space {
   }
   .q-textarea--autogrow .q-field__control {
     height: auto;
-    min-height: 34px;
+    min-height: 30px;
   }
 }

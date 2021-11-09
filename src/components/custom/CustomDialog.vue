@@ -194,16 +194,16 @@ export default {
         style.maxHeight = 100 / this.uiZoom + 'vh !important'
       } else {
         if (this.curX != null) {
-          style.left = Math.max(0, Math.min(this.$q.screen.width - (this.curWidth || this.minWidth), this.curX)) + 'px'
+          style.left = Math.max(0, Math.min(this.getClientWidth() - (this.curWidth || this.minWidth), this.curX)) + 'px'
         }
         if (this.curY != null) {
-          style.top = Math.max(0, Math.min(this.$q.screen.height - (this.curHeight || this.minHeight), this.curY)) + 'px'
+          style.top = Math.max(0, Math.min(this.getClientHeight() - (this.curHeight || this.minHeight), this.curY)) + 'px'
         }
         if (this.curWidth != null) {
-          style.width = Math.min(this.$q.screen.width, this.curWidth) + 'px'
+          style.width = Math.min(this.getClientWidth(), this.curWidth) + 'px'
         }
         if (this.curHeight != null) {
-          style.height = Math.min(this.$q.screen.height, this.curHeight) + 'px'
+          style.height = Math.min(this.getClientHeight(), this.curHeight) + 'px'
         }
       }
       return style
@@ -228,6 +228,14 @@ export default {
 
   methods: {
     ...exposeChildMethods('dialog', ['show', 'hide', 'toggle', 'focus', 'shake']),
+
+    // 获取当前客户区域宽高
+    getClientWidth() {
+      return document.documentElement.clientWidth / this.uiZoom
+    },
+    getClientHeight() {
+      return document.documentElement.clientHeight / this.uiZoom
+    },
 
     // 点击确定
     ok() {
@@ -264,9 +272,9 @@ export default {
     // 拖拽移动
     dragMove(e, cursor = 'move') {
       this.dragDeal(e, cursor, () => {
-        const maxX = this.$q.screen.width - this.__initialRect.width
+        const maxX = this.getClientWidth() - this.__initialRect.width
         this.curX = Math.round(Math.max(0, Math.min(maxX, this.__initialRect.x + e.offset.x / this.uiZoom)))
-        const maxY = this.$q.screen.height - this.__initialRect.height
+        const maxY = this.getClientHeight() - this.__initialRect.height
         this.curY = Math.round(Math.max(0, Math.min(maxY, this.__initialRect.y + e.offset.y / this.uiZoom)))
       })
     },
@@ -276,18 +284,18 @@ export default {
       const cursor = (dx ? (!dy ? '' : dx === dy ? 's' : 'n') + 'e' : 's') + '-resize'
       this.dragDeal(e, cursor, () => {
         if (dx) {
-          const maxWidth = Math.min(this.maxWidth || Infinity, this.$q.screen.width)
+          const maxWidth = Math.min(this.maxWidth || Infinity, this.getClientWidth())
           this.curWidth = Math.round(Math.max(this.minWidth, Math.min(maxWidth, this.__initialRect.width + (e.offset.x * dx) / this.uiZoom)))
           if (dx < 0 && !(this.cardStyle && this.cardStyle.right && this.curX == null)) {
-            const maxX = this.$q.screen.width - this.curWidth
+            const maxX = this.getClientWidth() - this.curWidth
             this.curX = Math.round(Math.max(0, Math.min(maxX, this.__initialRect.x + e.offset.x / this.uiZoom)))
           }
         }
         if (dy) {
-          const maxHeight = Math.min(this.maxHeight || Infinity, this.$q.screen.height)
+          const maxHeight = Math.min(this.maxHeight || Infinity, this.getClientHeight())
           this.curHeight = Math.round(Math.max(this.minHeight, Math.min(maxHeight, this.__initialRect.height + (e.offset.y * dy) / this.uiZoom)))
           if (dy < 0 && !(this.cardStyle && this.cardStyle.bottom && this.curY == null)) {
-            const maxY = this.$q.screen.height - this.curHeight
+            const maxY = this.getClientHeight() - this.curHeight
             this.curY = Math.round(Math.max(0, Math.min(maxY, this.__initialRect.y + e.offset.y / this.uiZoom)))
           }
         }
