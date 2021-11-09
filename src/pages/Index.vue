@@ -12,7 +12,7 @@
     :max-zoom="maxViewZoom"
     @resize="(w, h) => ((halfViewWidth = w / 2), (halfViewHeight = h / 2))"
   >
-    <router-view name="grid" />
+    <router-view name="grid" ref="grid" />
   </ZoomView>
 </template>
 

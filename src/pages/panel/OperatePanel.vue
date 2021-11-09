@@ -16,9 +16,9 @@ export default {
     // 操作表单
     form: [
       {
-        xGrids: { t: 'num', label: '横向格数', minVal: 10, maxVal: 10000, width: 80 },
-        yGrids: { t: 'num', label: '纵向格数', minVal: 10, maxVal: 10000, width: 80 },
-        gridSize: { t: 'num', label: '格子边长', minVal: 1, maxVal: 100, width: 60 }
+        xGrids: { t: 'num', label: '横向格数', defVal: 100, minVal: 10, maxVal: 10000, width: 80 },
+        yGrids: { t: 'num', label: '纵向格数', defVal: 100, minVal: 10, maxVal: 10000, width: 80 },
+        gridSize: { t: 'num', label: '格子边长', defVal: 20, minVal: 1, maxVal: 100, width: 60 }
       }
     ],
     // 表单字段默认参数
