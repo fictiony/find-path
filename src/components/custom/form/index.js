@@ -2,7 +2,7 @@ import CommonForm from './CommonForm.vue'
 // import CommonList from './CommonList.vue'
 // import CommonArray from './CommonArray.vue'
 import CommonBtn from './CommonBtn.vue'
-// import CommonCtrl from './CommonCtrl.vue'
+import CommonCtrl from './CommonCtrl.vue'
 import CommonInput from './CommonInput.vue'
 // import TextInput from './TextInput.vue'
 import NumInput from './NumInput.vue'
@@ -13,7 +13,7 @@ export {
   // CommonList,
   // CommonArray,
   CommonBtn,
-  // CommonCtrl,
+  CommonCtrl,
   CommonInput,
   // TextInput,
   NumInput
@@ -26,7 +26,7 @@ export const INPUT = {
   // list: CommonList,
   // array: CommonArray,
   btn: CommonBtn,
-  // ctrl: CommonCtrl,
+  ctrl: CommonCtrl,
   // text: TextInput,
   num: NumInput,
   // file: FileInput,

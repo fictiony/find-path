@@ -19,9 +19,9 @@
     >
       <CustomMenu v-model="info.open" :items="$data[name]" :offset="[0, -2]" key-scope="main" />
     </q-btn>
-
     <div ref="stats" class="relative-position full-height" />
-    <q-space />
+
+    <div class="q-space text-center ellipsis">{{ editHint }}</div>
 
     <q-btn class="no-drag-app q-px-xs" flat dense icon="minimize" @click="minimize" />
     <q-btn class="no-drag-app q-px-xs" flat dense :icon="maximized || $q.fullscreen.isActive ? 'filter_none' : 'crop_square'" @click="maximize" />
@@ -36,6 +36,14 @@ import { mapStateRW } from 'boot/utils'
 import * as dlg from 'pages/dialog'
 import { Stats } from 'three-stats'
 
+// 笔刷模式
+const BRUSH_MODES = {
+  叠加: 'a',
+  扣除: 'd',
+  覆盖: 'c',
+  清除: 'e'
+}
+
 // 浮动面板
 const FLOAT_PANELS = {
   operatePanel: '操作面板'
@@ -44,9 +52,75 @@ const FLOAT_PANELS = {
 export default {
   data: vm => ({
     mainMenu: {
+      brushMenu: { label: '笔刷', open: false },
       viewMenu: { label: '视图', open: false },
       helpMenu: { label: '帮助', open: false }
     },
+    brushMenu: [
+      ...Object.keys(BRUSH_MODES).map((name, index) => {
+        const mode = index + 1
+        return {
+          label: name + '模式',
+          icon: () => (vm.brushMode === mode ? 'done' : ''),
+          shortcut: BRUSH_MODES[name],
+          handler: () => (vm.brushMode = vm.brushMode === mode ? null : mode)
+        }
+      }),
+      null,
+      {
+        label: '笔刷调大',
+        icon: 'add_circle_outline',
+        shortcut: '=',
+        handler: () => (vm.brushSize = Math.min(200, Math.ceil(vm.brushSize * 1.2))),
+        disable: () => vm.brushSize >= 200
+      },
+      {
+        label: '笔刷调小',
+        icon: 'remove_circle_outline',
+        shortcut: '-',
+        handler: () => (vm.brushSize = Math.max(1, Math.floor(vm.brushSize / 1.2))),
+        disable: () => vm.brushSize <= 1
+      },
+      {
+        label: '单格笔刷',
+        icon: 'crop_square',
+        shortcut: '0',
+        handler: () => (vm.brushSize = 1),
+        disable: () => vm.brushSize === 1
+      },
+      null,
+      {
+        label: '硬笔刷',
+        icon: 'format_paint',
+        shortcut: 'h',
+        handler: () => (vm.brushSoft = 0)
+      },
+      {
+        label: '软笔刷',
+        icon: 'brush',
+        shortcut: 's',
+        handler: () => (vm.brushSoft = 50)
+      },
+      null,
+      {
+        label: '最弱阻碍',
+        icon: 'filter_1',
+        shortcut: '1',
+        handler: () => (vm.brushState = 1)
+      },
+      {
+        label: '最强阻碍',
+        icon: 'filter_9',
+        shortcut: '9',
+        handler: () => (vm.brushState = 100)
+      },
+      {
+        label: '绝对阻挡',
+        icon: 'filter_9_plus',
+        shortcut: '`',
+        handler: () => (vm.brushState = 200)
+      }
+    ],
     viewMenu: [
       ...Object.keys(FLOAT_PANELS).map(
         name =>
@@ -143,7 +217,9 @@ export default {
   computed: {
     ...mapState('main', ['appTitle', 'loading', 'maximized', 'viewZoom', 'uiZoom']),
     ...mapStateRW('main', ['darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
-    ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom'])
+    ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom']),
+    ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState']),
+    ...mapGetters('edit', ['editHint'])
   },
 
   watch: {

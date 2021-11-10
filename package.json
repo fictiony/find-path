@@ -2,7 +2,7 @@
   "name": "findpath",
   "version": "0.0.1",
   "productName": "FInd Path Demo",
-  "description": "Path Finding Algorithm Demo",
+  "description": "寻路算法演示 - Path Finding Algorithm Demo",
   "author": "fictiony <fictiony@qq.com>",
   "private": true,
   "scripts": {

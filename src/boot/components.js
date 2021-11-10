@@ -21,7 +21,7 @@ import {
   // CommonList,
   // CommonArray,
   CommonBtn,
-  // CommonCtrl,
+  CommonCtrl,
   CommonInput,
   // TextInput,
   NumInput
@@ -47,7 +47,7 @@ const components = {
   // CommonList,
   // CommonArray,
   CommonBtn,
-  // CommonCtrl,
+  CommonCtrl,
   CommonInput,
   // TextInput,
   NumInput
