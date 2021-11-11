@@ -15,7 +15,8 @@ const state = () => ({
   // 计算公式为：(cos(π * D^(1-ln(S/50))^2) + 1) / 2，其中D/S分别表示距离/软度
   brushState: 200, // 笔刷状态值（1~200）
   brushStatesRefresh: 1, // 用于手动刷新笔刷格子状态列表（当笔刷类型为随机杂点时有用）
-  brushPos: null // 笔刷当前位置：{x, y}
+  brushPos: null, // 笔刷当前位置：{x, y}
+  brushDown: false // 笔刷当前是否按下
 })
 
 // ----------------------------------------------------------------------------【getters】
@@ -35,45 +36,45 @@ const getters = {
   // - @return [X格点, Y格点]
   getGridXY (state) {
     return (x, y) => {
-      const { xGrids: w, yGrids: h, gridSize: sz } = state
-      return [Math.floor(x / sz + w / 2), Math.floor(y / sz + h / 2)]
+      const { xGrids, yGrids, gridSize } = state
+      return [
+        Math.floor(x / gridSize + xGrids / 2),
+        Math.floor(y / gridSize + yGrids / 2)
+      ]
     }
   },
 
   // 笔刷格子状态列表（预先计算好）
   brushStates (state) {
     if (!state.brushStatesRefresh) return
-    const {
-      brushType: ty,
-      brushSize: sz,
-      brushSoft: so,
-      brushState: st
-    } = state
-    const states = new Array(sz * sz)
-    if (ty === 1 && so === 0) {
-      states.fill(st)
+    const { brushType, brushSize, brushSoft, brushState } = state
+    const states = new Array(brushSize * brushSize)
+    if (brushType === 1 && brushSoft === 0) {
+      states.fill(brushState)
     } else {
-      const c = (sz - 1) / 2
-      for (let y = 0, i = 0; y < sz; y++) {
-        for (let x = 0; x < sz; x++) {
+      const c = (brushSize - 1) / 2
+      for (let y = 0, i = 0; y < brushSize; y++) {
+        for (let x = 0; x < brushSize; x++) {
           let d
-          let s = st
-          if (ty > 1) {
+          let s = brushState
+          if (brushType > 1) {
             d = Math.hypot(x - c, y - c)
             if (d > c) {
               s = 0
-            } else if (ty === 3) {
+            } else if (brushType === 3) {
               const p = (1 - d / c) ** 2 * 0.5
               if (Math.random() >= p) {
                 s = 0
               }
             }
-          } else if (so > 0) {
+          } else if (brushSoft > 0) {
             d = Math.max(Math.abs(x - c), Math.abs(y - c))
           }
-          if (s > 0 && so > 0) {
+          if (s > 0 && brushSoft > 0) {
             s *=
-              (Math.cos(Math.PI * d ** ((1 - Math.log(so / 50)) ** 2)) + 1) / 2
+              (Math.cos(Math.PI * d ** ((1 - Math.log(brushSoft / 50)) ** 2)) +
+                1) /
+              2
           }
           states[i++] = s
         }
@@ -95,7 +96,8 @@ const mutations = {
     'brushSoft',
     'brushState',
     'brushStatesRefresh',
-    'brushPos'
+    'brushPos',
+    'brushDown'
   ])
 }
 

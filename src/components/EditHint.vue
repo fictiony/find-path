@@ -3,7 +3,7 @@
 </template>
 
 <script>
-// 【编辑状态信息面板】
+// 【编辑状态信息】
 import { mapState } from 'vuex'
 
 export default {

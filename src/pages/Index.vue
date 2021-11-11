@@ -10,15 +10,18 @@
     :zoom.sync="viewZoom"
     :min-zoom="minViewZoom"
     :max-zoom="maxViewZoom"
+    @start-drag="$setCursor('grabbing')"
+    @stop-drag="$setCursor(showDrawCursor ? 'crosshair' : '')"
     @resize="(w, h) => ((halfViewWidth = w / 2), (halfViewHeight = h / 2))"
-    @mousedown.native.capture="onMouseDown"
+    @mousedown.native.capture="onPress"
     @mousedown.native="$clearFocus"
     @mousemove.native="onMouseMove"
     @mouseout.native="brushPos = null"
-    @touchstart.native.capture="onMouseDown"
+    @touchstart.native.capture="onPress"
     @touchstart.native="$clearFocus"
     @touchend.native="brushPos = null"
     @touchcancel.native="brushPos = null"
+    v-touch-pan.mouse.preserveCursor="onDrag"
   >
     <router-view name="grid" ref="grid" />
   </ZoomView>
@@ -26,7 +29,7 @@
 
 <script>
 // 【主视图区】
-import { mapGetters } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 import { mapStateRW } from 'boot/utils'
 import key from 'keymaster'
 
@@ -40,8 +43,20 @@ export default {
   computed: {
     ...mapStateRW('main', ['viewZoom']),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom']),
-    ...mapStateRW('edit', ['xGrids', 'yGrids', 'brushMode', 'brushPos']),
-    ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight', 'getGridXY'])
+    ...mapState('edit', ['xGrids', 'yGrids', 'brushMode']),
+    ...mapStateRW('edit', ['brushPos', 'brushDown']),
+    ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight', 'getGridXY']),
+
+    // 是否显示绘制光标
+    showDrawCursor() {
+      return this.brushDown || (!!this.brushPos && !!this.brushMode && !this.$refs.view.dragState)
+    }
+  },
+
+  watch: {
+    showDrawCursor(val) {
+      this.$setCursor(val ? 'crosshair' : '')
+    }
   },
 
   methods: {
@@ -54,18 +69,31 @@ export default {
       return { x, y }
     },
 
-    // 鼠标按下处理
-    onMouseDown(e) {
+    // 按下处理
+    onPress(e) {
       const draw = !!this.brushMode && !key.isPressed(32) // 空格键按下时不进行绘制
       if (!draw) return
-      const t = e.changedTouches ? e.changedTouches[0] : e
-      const xy = this.pageToGridXY(t)
-      if (!xy) return
-      e.preventDefault()
+      e = e.changedTouches ? e.changedTouches[0] : e
+      const xy = this.pageToGridXY(e)
+      if (!xy) return // 不在网格中也不进行绘制
+
+      // 进行绘制时屏蔽视图拖拽
+      this.brushDown = true
       this.$refs.view.$forceSet('interactive', false) // 若在模板中绑定该属性，会由于模板刷新导致click事件无法被屏蔽
       setTimeout(() => {
         this.$refs.view.$forceSet('interactive', true)
       })
+    },
+
+    // 拖拽处理
+    onDrag(e) {
+      this.onMouseMove(e.evt)
+      if (!this.brushDown) return
+      if (e.isFinal) {
+        this.brushDown = false
+      } else {
+        //
+      }
     },
 
     // 鼠标移动处理

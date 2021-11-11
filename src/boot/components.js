@@ -29,6 +29,9 @@ import {
 } from 'components/custom/form'
 
 // 业务功能组件
+import EditHint from 'components/EditHint.vue'
+import BrushPattern from 'components/BrushPattern.vue'
+import BrushCursor from 'components/BrushCursor.vue'
 
 // 注册组件
 const components = {
@@ -50,8 +53,12 @@ const components = {
   CommonCtrl,
   CommonInput,
   // TextInput,
-  NumInput
+  NumInput,
   // FileInput,
+
+  EditHint,
+  BrushPattern,
+  BrushCursor
 }
 Object.keys(components).forEach(name => {
   Vue.component(components[name].name || name, components[name])

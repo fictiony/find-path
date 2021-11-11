@@ -21,7 +21,7 @@
     </q-btn>
     <div ref="stats" class="relative-position full-height" />
 
-    <router-view name="editHint" />
+    <EditHint />
 
     <q-btn class="no-drag-app q-px-xs" flat dense icon="minimize" @click="minimize" />
     <q-btn class="no-drag-app q-px-xs" flat dense :icon="maximized || $q.fullscreen.isActive ? 'filter_none' : 'crop_square'" @click="maximize" />
