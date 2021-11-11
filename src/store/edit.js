@@ -20,24 +20,6 @@ const state = () => ({
 
 // ----------------------------------------------------------------------------【getters】
 const getters = {
-  // 编辑状态信息
-  editHint (state) {
-    const {
-      xGrids,
-      yGrids,
-      brushMode,
-      brushType,
-      brushSize,
-      brushSoft,
-      brushState,
-      brushPos
-    } = state
-    return (
-      `⬜ ${xGrids} * ${yGrids} - 🖌️ [${brushMode || 0}-${brushType}] ${brushSize} * ${brushSoft} * ${brushState}` +
-      (brushPos ? ` - 🖱️ ${brushPos.x}, ${brushPos.y}` : '')
-    )
-  },
-
   // 网格宽度的一半
   halfGridWidth (state) {
     return (state.xGrids * state.gridSize) / 2

@@ -14,7 +14,8 @@ const routes = [
           {
             path: '',
             components: {
-              grid: () => import('pages/GridView.vue')
+              grid: () => import('pages/GridView.vue'),
+              editHint: () => import('pages/panel/EditHintPanel.vue')
             }
           }
         ]

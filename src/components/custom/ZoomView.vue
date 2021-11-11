@@ -128,10 +128,13 @@ export default {
 
     // 更新视区中心点坐标
     updateViewCenter(x, y) {
-      this.viewX = Number(x)
-      this.viewY = Number(y)
-      this.refreshViewX()
-      this.refreshViewY()
+      if (this.__ignoreRangeLimit) {
+        this.viewX = Number(x)
+        this.viewY = Number(y)
+      } else {
+        this.viewX = Math.max(this.minX, Math.min(this.maxX, Number(x)))
+        this.viewY = Math.max(this.minY, Math.min(this.maxY, Number(y)))
+      }
     },
 
     // 更新视图缩放比率
@@ -151,13 +154,11 @@ export default {
 
     // 刷新视区中心点X坐标
     refreshViewX() {
-      if (this.__ignoreRangeLimit) return
       this.viewX = Math.max(this.minX, Math.min(this.maxX, this.viewX))
     },
 
     // 刷新视区中心点Y坐标
     refreshViewY() {
-      if (this.__ignoreRangeLimit) return
       this.viewY = Math.max(this.minY, Math.min(this.maxY, this.viewY))
     },
 

@@ -21,7 +21,7 @@
     </q-btn>
     <div ref="stats" class="relative-position full-height" />
 
-    <div class="q-space text-center ellipsis">{{ editHint }}</div>
+    <router-view name="editHint" />
 
     <q-btn class="no-drag-app q-px-xs" flat dense icon="minimize" @click="minimize" />
     <q-btn class="no-drag-app q-px-xs" flat dense :icon="maximized || $q.fullscreen.isActive ? 'filter_none' : 'crop_square'" @click="maximize" />
@@ -218,8 +218,7 @@ export default {
     ...mapState('main', ['appTitle', 'loading', 'maximized', 'viewZoom', 'uiZoom']),
     ...mapStateRW('main', ['darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom']),
-    ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState']),
-    ...mapGetters('edit', ['editHint'])
+    ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState'])
   },
 
   watch: {
