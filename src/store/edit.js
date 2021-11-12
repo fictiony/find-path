@@ -55,26 +55,24 @@ const getters = {
       const c = (brushSize - 1) / 2
       for (let y = 0, i = 0; y < brushSize; y++) {
         for (let x = 0; x < brushSize; x++) {
-          let d
-          let s = brushState
+          let d // 距离与半径的比值
+          let s = brushState // 当前格子的状态值
           if (brushType > 1) {
-            d = Math.hypot(x - c, y - c)
-            if (d > c) {
+            d = Math.hypot(x - c, y - c) / (c + 0.5)
+            if (d > 1) {
               s = 0
             } else if (brushType === 3) {
-              const p = (1 - d / c) ** 2 * 0.5
+              const p = (1 - d) ** 2 * 0.5 // 中心最大概率0.5，向边缘递减到0
               if (Math.random() >= p) {
                 s = 0
               }
             }
           } else if (brushSoft > 0) {
-            d = Math.max(Math.abs(x - c), Math.abs(y - c))
+            d = Math.max(Math.abs(x - c), Math.abs(y - c)) / (c + 0.5)
           }
           if (s > 0 && brushSoft > 0) {
-            s *=
-              (Math.cos(Math.PI * d ** ((1 - Math.log(brushSoft / 50)) ** 2)) +
-                1) /
-              2
+            const ratio = (1 - Math.log(brushSoft / 50)) ** 2
+            s = Math.max(1, Math.round((Math.cos(Math.PI * d ** ratio) + 1) * (s / 2)))
           }
           states[i++] = s
         }

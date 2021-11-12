@@ -2,7 +2,7 @@
   <div>
     <canvas ref="bg" class="absolute-center" :style="canvasStyle" :width="xGrids" :height="yGrids" />
     <canvas ref="state" class="absolute-center" :style="canvasStyle" :width="xGrids" :height="yGrids" />
-    <BrushCursor />
+    <BrushCursor ref="cursor" />
   </div>
 </template>
 

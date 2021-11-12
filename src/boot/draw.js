@@ -1,5 +1,9 @@
 // 【绘图工具函数】
 
+// 格子颜色
+export const OBSTACLE_COLOR = [100, 160, 255] // 不同程度的障碍（Alpha分量31~230表示程度）
+export const WALL_COLOR = [200, 50, 0, 230] // 绝对阻挡不可通过
+
 // 设置单个像素颜色
 // - @data 位图数据
 // - @index 像素序号

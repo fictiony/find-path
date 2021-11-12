@@ -2,6 +2,7 @@
   <FloatPanel title="操作面板" state="operatePanel" :style="{ backgroundColor: $q.dark.isActive ? '#0006' : '#fff6' }">
     <q-scroll-area class="fit column q-px-sm q-py-xs">
       <CommonForm class="q-pa-sm" :form="form" :value="_self" auto-save :input-params="inputParams" @input="onInput" />
+      <BrushPattern class="q-mx-sm q-pa-xs float-left" style="background-color: #8881; border: 1px solid #8888; border-radius: 4px" />
     </q-scroll-area>
   </FloatPanel>
 </template>

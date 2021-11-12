@@ -15,12 +15,13 @@
     @resize="(w, h) => ((halfViewWidth = w / 2), (halfViewHeight = h / 2))"
     @mousedown.native.capture="onPress"
     @mousedown.native="$clearFocus"
+    @mouseup.native="brushDown = false"
     @mousemove.native="onMouseMove"
     @mouseout.native="brushPos = null"
     @touchstart.native.capture="onPress"
     @touchstart.native="$clearFocus"
-    @touchend.native="brushPos = null"
-    @touchcancel.native="brushPos = null"
+    @touchend.native=";(brushPos = null), (brushDown = false)"
+    @touchcancel.native=";(brushPos = null), (brushDown = false)"
     v-touch-pan.mouse.preserveCursor="onDrag"
   >
     <router-view name="grid" ref="grid" />
@@ -53,7 +54,14 @@ export default {
     }
   },
 
+  provide() {
+    return {
+      page: this
+    }
+  },
+
   watch: {
+    // 切换绘制光标
     showDrawCursor(val) {
       this.$setCursor(val ? 'crosshair' : '')
     }

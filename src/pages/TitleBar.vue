@@ -203,6 +203,13 @@ export default {
               shortcut: 'Ctrl+F12',
               keyScope: 'all',
               handler: vm.$inspector
+            },
+            {
+              label: '查看格子状态表',
+              handler: () => {
+                console.log('【笔刷】\n', vm.$clone(vm.$store.getters['edit/brushStates']))
+                console.log('【全图】\n', vm.$clone(vm.$store.state.edit.gridStates))
+              }
             }
           ]
         : []),

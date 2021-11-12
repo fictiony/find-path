@@ -1,6 +1,6 @@
 <template>
-  <div class="absolute" :style="cursorStyle" v-show="brushPos">
-    <BrushPattern class="absolute no-pointer-events" :style="patternStyle" />
+  <div class="absolute" :style="cursorStyle" v-show="visible">
+    <BrushPattern ref="pattern" class="absolute no-pointer-events" :style="patternStyle" />
   </div>
 </template>
 
@@ -9,9 +9,16 @@
 import { mapState, mapGetters } from 'vuex'
 
 export default {
+  inject: ['page'],
+
   computed: {
     ...mapState('edit', ['gridSize', 'brushMode', 'brushSize', 'brushPos', 'brushDown']),
     ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight']),
+
+    // 是否显示
+    visible() {
+      return !!this.brushPos && !!this.brushMode && !this.page.$refs.view.dragState && !this.brushDown
+    },
 
     // 光标样式
     cursorStyle() {
@@ -30,8 +37,7 @@ export default {
         left: offset + 'px',
         top: offset + 'px',
         width: size + 'px',
-        height: size + 'px',
-        opacity: this.brushDown ? 1 : 0.5
+        height: size + 'px'
       }
     }
   }
