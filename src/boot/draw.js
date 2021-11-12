@@ -1,8 +1,17 @@
 // 【绘图工具函数】
 
 // 格子颜色
-export const OBSTACLE_COLOR = [100, 160, 255] // 不同程度的障碍（Alpha分量31~230表示程度）
-export const WALL_COLOR = [200, 50, 0, 230] // 绝对阻挡不可通过
+const OBSTACLE_COLOR = [150, 100, 0] // 不同程度的障碍（Alpha分量31~230表示程度）
+const WALL_COLOR = [150, 30, 60, 230] // 绝对阻挡不可通过
+
+// 格子状态值转格子颜色
+// - @state 格子状态值
+// - @return 格子颜色
+export function stateToColor (state) {
+  if (state > 100) return WALL_COLOR
+  if (state > 0) return [...OBSTACLE_COLOR, 30 + state * 2]
+  return [0, 0, 0, 0]
+}
 
 // 设置单个像素颜色
 // - @data 位图数据

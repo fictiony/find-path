@@ -9,9 +9,10 @@
 <script>
 // 【网格视图】
 import { mapState } from 'vuex'
+import { mapStateRW } from 'boot/utils'
 import { debounce } from 'quasar'
 // eslint-disable-next-line no-unused-vars
-import { setPixel, intersectRect, mergeRect } from 'boot/draw'
+import { stateToColor, setPixel, intersectRect, mergeRect } from 'boot/draw'
 
 export default {
   data: () => ({
@@ -19,7 +20,8 @@ export default {
   }),
 
   computed: {
-    ...mapState('edit', ['xGrids', 'yGrids', 'gridSize', 'brushSize', 'brushPos']),
+    ...mapState('edit', ['xGrids', 'yGrids', 'gridSize', 'gridStates', 'brushSize', 'brushPos']),
+    ...mapStateRW('edit', ['dirtyArea']),
 
     // 画布样式
     canvasStyle() {
@@ -32,9 +34,13 @@ export default {
   },
 
   watch: {
-    // 网格数量改变后刷新全部网格
+    // 网格数量和状态表改变后刷新全部网格
     xGrids: 'refreshGrids',
     yGrids: 'refreshGrids',
+    gridStates: 'refreshGrids',
+
+    // 脏区域更改后自动刷新
+    dirtyArea: 'refreshDirtyArea',
 
     // 笔刷位置改变后刷新笔刷区域网格（前后两个区域都要刷）
     brushPos(val, oldVal) {
@@ -71,6 +77,7 @@ export default {
     // 刷新背景
     refreshBg() {
       const ctx = this.$refs.bg.getContext('2d')
+      ctx.clearRect(0, 0, this.xGrids, this.yGrids)
       ctx.fillStyle = this.bgPattern
       ctx.fillRect(0, 0, this.xGrids, this.yGrids)
     },
@@ -78,32 +85,24 @@ export default {
     // 刷新指定区域网格
     // - @left, top, width, height 区域范围
     refreshArea(left, top, width, height) {
-      const [x, y, w, h] = intersectRect(left, top, width, height, 0, 0, this.xGrids, this.yGrids)
+      const { xGrids, yGrids, gridStates } = this
+      const [x, y, w, h] = intersectRect(left, top, width, height, 0, 0, xGrids, yGrids)
       if (!w || !h) return
-      // console.log('刷新区域', , x, y, w, h)
+      // console.log('刷新区域', x, y, w, h)
 
       // 绘制格子
-      const ctx = this.$refs.state.getContext('2d')
-      const imageData = ctx.createImageData(w, h)
+      const imageData = new ImageData(w, h)
       const data = imageData.data
       for (let j = 0, index = 0; j < h; j++) {
         for (let i = 0; i < w; i++) {
-          const color = this.getGridColor(i + x, j + y)
-          if (color) {
-            setPixel(data, index, ...color)
-          }
+          const pos = i + x + (j + y) * xGrids
+          const state = gridStates[pos]
+          state && setPixel(data, index, ...stateToColor(state))
           index += 4
         }
       }
+      const ctx = this.$refs.state.getContext('2d')
       ctx.putImageData(imageData, x, y)
-    },
-
-    // 获取指定坐标的格子颜色
-    // - @x, y 格子坐标
-    // - @return [红色0~255, 绿色0~255, 蓝色0~255, 不透明度0~255]，无则返回null
-    getGridColor(x, y) {
-      if (x % 10 && y % 10) return null
-      return [0, 255, 0, 200]
     },
 
     // 刷新全部网格
@@ -112,7 +111,15 @@ export default {
       this.refreshBg()
       this.refreshArea(0, 0, this.xGrids, this.yGrids)
       console.log('用时', Date.now() - tm)
-    }, 10)
+    }, 100),
+
+    // 刷新脏区域网格
+    refreshDirtyArea() {
+      if (this.dirtyArea) {
+        this.refreshArea(...this.dirtyArea)
+        this.dirtyArea = null
+      }
+    }
   },
 
   mounted() {

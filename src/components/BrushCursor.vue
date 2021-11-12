@@ -1,5 +1,5 @@
 <template>
-  <div class="absolute" :style="cursorStyle" v-show="visible">
+  <div class="absolute" :style="cursorStyle" v-if="visible">
     <BrushPattern ref="pattern" class="absolute no-pointer-events" :style="patternStyle" />
   </div>
 </template>

@@ -6,9 +6,10 @@ const state = () => ({
   xGrids: 100, // 横向格数
   yGrids: 100, // 纵向格数
   gridSize: 20, // 格子边长
-  gridStates: {}, // 格子状态表：{ 'X-Y': 状态 }，状态可为：1~100-不同程度的阻碍/101~200-绝对阻挡不可通过/其他-无阻挡
+  gridStates: {}, // 格子状态表：{ 序号: 状态值 }，序号为：X坐标 + Y坐标 * 纵向格数， 状态值可为：1~100-不同程度的阻碍/101~200-绝对阻挡不可通过/其他-无阻挡
+  dirtyArea: null, // 脏区域范围：[left, top, width, height]
 
-  brushMode: null, // 笔刷模式：1-叠加/2-扣除/3-覆盖/4-清除/null-无
+  brushMode: null, // 笔刷模式：1-叠加/2-扣除/3-合并/4-清除/null-无
   brushType: 2, // 笔刷样式：1-正方形/2-圆形/3-随机杂点
   brushSize: 5, // 笔刷大小（1~200）
   brushSoft: 0, // 笔刷软度（0~100），值越大表示边缘越快渐变到1，0表示不渐变
@@ -62,7 +63,7 @@ const getters = {
             if (d > 1) {
               s = 0
             } else if (brushType === 3) {
-              const p = (1 - d) ** 2 * 0.5 // 中心最大概率0.5，向边缘递减到0
+              const p = (1 - d) ** 2 // 中心最大概率1，向边缘递减到0
               if (Math.random() >= p) {
                 s = 0
               }
@@ -72,7 +73,10 @@ const getters = {
           }
           if (s > 0 && brushSoft > 0) {
             const ratio = (1 - Math.log(brushSoft / 50)) ** 2
-            s = Math.max(1, Math.round((Math.cos(Math.PI * d ** ratio) + 1) * (s / 2)))
+            s = Math.max(
+              1,
+              Math.round((Math.cos(Math.PI * d ** ratio) + 1) * (s / 2))
+            )
           }
           states[i++] = s
         }
@@ -88,6 +92,8 @@ const mutations = {
     'xGrids',
     'yGrids',
     'gridSize',
+    'gridStates',
+    'dirtyArea',
     'brushMode',
     'brushType',
     'brushSize',
@@ -101,9 +107,61 @@ const mutations = {
 
 // ----------------------------------------------------------------------------【actions】
 const actions = {
+  // 清空格子状态
+  async clearGrids ({ commit }) {
+    commit('gridStates', {})
+    commit('dirtyArea', null)
+  },
+
   // 笔刷涂点
-  // - @x, y 涂点坐标
-  async brushDraw ({ state, commit }, [x, y]) {}
+  async brushDraw ({ state, getters, commit }) {
+    const { xGrids, yGrids, gridStates, brushMode, brushSize } = state
+    if (!brushMode) return
+    const { x, y } = state.brushPos
+    const offset = Math.floor(brushSize / 2)
+
+    // 绘制
+    getters.brushStates.forEach((state, index) => {
+      if (!state) return
+      const bx = x - offset + (index % brushSize)
+      if (bx < 0 || bx >= xGrids) return
+      const by = y - offset + Math.floor(index / brushSize)
+      if (by < 0 || by >= yGrids) return
+      index = bx + by * xGrids
+      const oldState = gridStates[index] || 0
+      switch (brushMode) {
+        case 1: // 叠加
+          gridStates[index] = Math.min(200, oldState + state)
+          break
+        case 2: // 扣除
+          gridStates[index] = Math.max(0, oldState - state)
+          break
+        case 3: // 合并
+          gridStates[index] = Math.max(oldState, state)
+          break
+        case 4: // 清除
+          gridStates[index] = 0
+          break
+      }
+    })
+
+    // 更新脏区域
+    const area = [x - offset, y - offset, brushSize, brushSize]
+    if (state.dirtyArea) {
+      const [x1, y1, w1, h1] = state.dirtyArea
+      const [x2, y2, w2, h2] = area
+      area[0] = Math.min(x1, x2)
+      area[1] = Math.min(y1, y2)
+      area[2] = Math.max(x1 + w1, x2 + w2) - area[0]
+      area[3] = Math.max(y1 + h1, y2 + h2) - area[1]
+    }
+    commit('dirtyArea', area)
+
+    // 若笔刷样式为随机，则每画一笔刷新一次
+    if (state.brushType === 3) {
+      commit('brushStatesRefresh', state.brushStatesRefresh + 1)
+    }
+  }
 }
 
 export default {

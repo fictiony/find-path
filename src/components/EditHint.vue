@@ -8,7 +8,7 @@ import { mapState } from 'vuex'
 
 export default {
   computed: {
-    ...mapState('edit', ['xGrids', 'yGrids', 'brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState', 'brushPos']),
+    ...mapState('edit', ['xGrids', 'yGrids', 'gridStates', 'brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState', 'brushPos']),
 
     // 编辑状态信息
     editHint() {
@@ -16,7 +16,9 @@ export default {
       parts.push(`⬜ ${this.xGrids} * ${this.yGrids}`)
       parts.push(`🖌️ [${this.brushMode || 0}-${this.brushType}] ${this.brushSize} * ${this.brushSoft} * ${this.brushState}`)
       if (this.brushPos) {
-        parts.push(`🖱️ ${this.brushPos.x}, ${this.brushPos.y}`)
+        const { x, y } = this.brushPos
+        parts.push(`🖱️ ${x}, ${y}`)
+        parts.push(`0️⃣ ${this.gridStates[x + y * this.xGrids] || 0}`)
       }
       return parts.join(' - ')
     }

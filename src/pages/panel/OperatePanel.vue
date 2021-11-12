@@ -9,7 +9,7 @@
 
 <script>
 // 【操作面板】
-// import { mapState, mapActions } from 'vuex'
+import { mapActions } from 'vuex'
 import { mapStateRW } from 'boot/utils'
 import { QBtnToggle, QBadge, QSlider } from 'quasar'
 
@@ -41,7 +41,7 @@ export default {
         brushMode: {
           t: 'ctrl',
           label: '笔刷模式',
-          tips: '1-叠加 / 2-扣除 / 3-覆盖 / 4-清除',
+          tips: '1-叠加 / 2-扣除 / 3-合并 / 4-清除',
           component: QBtnToggle,
           options: BRUSH_MODE_OPTIONS,
           clearable: true
@@ -94,9 +94,17 @@ export default {
   },
 
   methods: {
+    ...mapActions('edit', ['clearGrids']),
+
     // 输入处理
     onInput({ field, value }) {
       // console.log(field, value)
+      switch (field) {
+        case 'xGrids':
+        case 'yGrids':
+          this.clearGrids()
+          break
+      }
     }
   }
 }

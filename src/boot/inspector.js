@@ -139,25 +139,28 @@ function vueName (component) {
   )
 }
 
+// 统计操作次数
+// - @info 操作信息（统一转为字符串）
+// - @delay 打印间隔（毫秒），不同间隔的统计将分开进行
+const stats = {}
+export function statTimes (info, delay = 1000) {
+  const stat = stats[delay] || {}
+  stat[info] = (stat[info] || 0) + 1
+  if (delay in stats) return
+  stats[delay] = stat
+  setTimeout(() => {
+    Object.keys(stat).forEach(info => {
+      console.log(info, '=', stat[info])
+    })
+    delete stats[delay]
+  }, delay)
+}
+Vue.prototype.$statTimes = statTimes
+
 // 统计Vue组件渲染次数
 // - @filter 同上
 // - @delay 打印间隔（毫秒）
 export function statRender (filter = '*', delay = 1000) {
-  if (filter) {
-    let stat = {}
-    let timeout = null
-    watchRender(filter, name => {
-      stat[name] = (stat[name] || 0) + 1
-      if (timeout == null) {
-        timeout = setTimeout(() => {
-          Object.keys(stat).forEach(i => console.log(i, '=', stat[i]))
-          stat = {}
-          timeout = null
-        }, delay)
-      }
-    })
-  } else {
-    watchRender()
-  }
+  watchRender(filter, filter ? name => statTimes('渲染 ' + name, delay) : null)
 }
 Vue.prototype.$statRender = statRender

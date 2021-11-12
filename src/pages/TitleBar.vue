@@ -40,7 +40,7 @@ import { Stats } from 'three-stats'
 const BRUSH_MODES = [
   { mode: 1, name: '叠加模式', icon: 'add', shortcut: 'A' },
   { mode: 2, name: '扣除模式', icon: 'remove', shortcut: 'D' },
-  { mode: 3, name: '覆盖模式', icon: 'edit', shortcut: 'C' },
+  { mode: 3, name: '合并模式', icon: 'edit', shortcut: 'C' },
   { mode: 4, name: '清除模式', icon: 'cleaning_services', shortcut: 'E' }
 ]
 
@@ -52,10 +52,19 @@ const FLOAT_PANELS = {
 export default {
   data: vm => ({
     mainMenu: {
+      editMenu: { label: '编辑', open: false },
       brushMenu: { label: '笔刷', open: false },
       viewMenu: { label: '视图', open: false },
       helpMenu: { label: '帮助', open: false }
     },
+    editMenu: [
+      {
+        label: '清空网格',
+        icon: 'delete_outline',
+        shortcut: 'Ctrl+X',
+        handler: vm.clearGrids
+      }
+    ],
     brushMenu: [
       ...BRUSH_MODES.map(({ mode, name, icon, shortcut }) => {
         return {
@@ -245,6 +254,7 @@ export default {
 
   methods: {
     ...mapActions('main', ['resetUIState', 'zoomView', 'zoomUI']),
+    ...mapActions('edit', ['clearGrids']),
 
     // 鼠标滑过菜单自动弹出
     hoverMenu(name) {

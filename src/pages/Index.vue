@@ -30,7 +30,7 @@
 
 <script>
 // 【主视图区】
-import { mapState, mapGetters } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 import { mapStateRW } from 'boot/utils'
 import key from 'keymaster'
 
@@ -68,6 +68,8 @@ export default {
   },
 
   methods: {
+    ...mapActions('edit', ['brushDraw']),
+
     // 页面坐标转格点坐标
     // - @return { x: X格点, y: Y格点 }（若格点越界则返回null）
     pageToGridXY(e) {
@@ -79,18 +81,19 @@ export default {
 
     // 按下处理
     onPress(e) {
-      const draw = !!this.brushMode && !key.isPressed(32) // 空格键按下时不进行绘制
-      if (!draw) return
-      e = e.changedTouches ? e.changedTouches[0] : e
-      const xy = this.pageToGridXY(e)
-      if (!xy) return // 不在网格中也不进行绘制
+      this.onMouseMove(e)
+      if (!this.brushMode || !this.brushPos) return // 未选笔刷模式或起点不在网格中时不进行绘制
+      if (key.isPressed(32)) return // 空格键按下时改为拖拽视图
 
-      // 进行绘制时屏蔽视图拖拽
-      this.brushDown = true
+      // 屏蔽视图拖拽
       this.$refs.view.$forceSet('interactive', false) // 若在模板中绑定该属性，会由于模板刷新导致click事件无法被屏蔽
       setTimeout(() => {
         this.$refs.view.$forceSet('interactive', true)
       })
+
+      // 进行绘制
+      this.brushDown = true
+      this.brushDraw()
     },
 
     // 拖拽处理
@@ -99,8 +102,6 @@ export default {
       if (!this.brushDown) return
       if (e.isFinal) {
         this.brushDown = false
-      } else {
-        //
       }
     },
 
@@ -112,6 +113,7 @@ export default {
         this.brushPos = null
       } else if (!this.brushPos || this.brushPos.x !== xy.x || this.brushPos.y !== xy.y) {
         this.brushPos = xy
+        this.brushDown && this.brushDraw()
       }
     }
   },
