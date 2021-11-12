@@ -37,16 +37,16 @@ import * as dlg from 'pages/dialog'
 import { Stats } from 'three-stats'
 
 // 笔刷模式
-const BRUSH_MODES = {
-  叠加: 'a',
-  扣除: 'd',
-  覆盖: 'c',
-  清除: 'e'
-}
+const BRUSH_MODES = [
+  { mode: 1, name: '叠加模式', icon: 'add', shortcut: 'A' },
+  { mode: 2, name: '扣除模式', icon: 'remove', shortcut: 'D' },
+  { mode: 3, name: '覆盖模式', icon: 'edit', shortcut: 'C' },
+  { mode: 4, name: '清除模式', icon: 'cleaning_services', shortcut: 'E' }
+]
 
 // 浮动面板
 const FLOAT_PANELS = {
-  operatePanel: '操作面板'
+  operatePanel: ['操作面板', 'Ctrl+O']
 }
 
 export default {
@@ -57,12 +57,11 @@ export default {
       helpMenu: { label: '帮助', open: false }
     },
     brushMenu: [
-      ...Object.keys(BRUSH_MODES).map((name, index) => {
-        const mode = index + 1
+      ...BRUSH_MODES.map(({ mode, name, icon, shortcut }) => {
         return {
-          label: name + '模式',
-          icon: () => (vm.brushMode === mode ? 'done' : ''),
-          shortcut: BRUSH_MODES[name],
+          label: () => name + (vm.brushMode === mode ? '（当前）' : ''),
+          icon,
+          shortcut,
           handler: () => (vm.brushMode = vm.brushMode === mode ? null : mode)
         }
       }),
@@ -92,13 +91,13 @@ export default {
       {
         label: '硬笔刷',
         icon: 'format_paint',
-        shortcut: 'h',
+        shortcut: 'H',
         handler: () => (vm.brushSoft = 0)
       },
       {
         label: '软笔刷',
         icon: 'brush',
-        shortcut: 's',
+        shortcut: 'S',
         handler: () => (vm.brushSoft = 50)
       },
       null,
@@ -122,14 +121,16 @@ export default {
       }
     ],
     viewMenu: [
-      ...Object.keys(FLOAT_PANELS).map(
-        name =>
-          FLOAT_PANELS[name] && {
-            label: FLOAT_PANELS[name],
-            icon: () => (vm[name] ? 'done' : ''),
-            handler: () => (vm[name] = !vm[name])
-          }
-      ),
+      ...Object.keys(FLOAT_PANELS).map(name => {
+        const panel = FLOAT_PANELS[name]
+        if (!panel) return null
+        return {
+          label: panel[0],
+          icon: () => (vm[name] ? 'done' : ''),
+          shortcut: panel[1],
+          handler: () => (vm[name] = !vm[name])
+        }
+      }),
       null,
       {
         label: '放大视图',
