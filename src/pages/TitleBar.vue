@@ -38,14 +38,16 @@ import { Stats } from 'three-stats'
 
 // 笔刷模式
 const BRUSH_MODES = [
-  { mode: 1, name: '叠加模式', icon: 'add', shortcut: 'A' },
-  { mode: 2, name: '扣除模式', icon: 'remove', shortcut: 'D' },
+  { mode: 1, name: '叠加模式', icon: 'add_circle_outline', shortcut: 'A' },
+  { mode: 2, name: '扣除模式', icon: 'remove_circle_outline', shortcut: 'D' },
   { mode: 3, name: '合并模式', icon: 'edit', shortcut: 'C' },
   { mode: 4, name: '清除模式', icon: 'cleaning_services', shortcut: 'E' }
 ]
 
 // 浮动面板
 const FLOAT_PANELS = {
+  toolPanel: ['工具栏', 'Ctrl+T'],
+  toolPanelFloat: ['工具栏浮动', 'Ctrl+Shift+T'],
   operatePanel: ['操作面板', 'Ctrl+O']
 }
 

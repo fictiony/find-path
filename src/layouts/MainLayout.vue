@@ -10,15 +10,11 @@
       </q-page>
     </q-page-container>
 
-    <my-drawer
-      side="right"
-      behavior="desktop"
-      elevated
-      :limits="[180, 500]"
-      :value="true"
-      :width.sync="operatePanelRect.width"
-      v-if="operatePanelShow"
-    >
+    <q-drawer side="left" behavior="desktop" elevated :width="44" value v-if="toolPanelShow">
+      <router-view name="tool" class="q-py-sm" />
+    </q-drawer>
+
+    <my-drawer side="right" behavior="desktop" elevated :limits="[180, 500]" :width.sync="operatePanelRect.width" value v-if="operatePanelShow">
       <router-view name="operate" />
     </my-drawer>
   </q-layout>

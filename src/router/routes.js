@@ -8,6 +8,7 @@ const routes = [
         components: {
           default: () => import('pages/Index.vue'),
           title: () => import('pages/TitleBar.vue'),
+          tool: () => import('pages/panel/ToolPanel.vue'),
           operate: () => import('pages/panel/OperatePanel.vue')
         },
         children: [

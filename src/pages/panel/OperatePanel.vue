@@ -15,8 +15,8 @@ import { QBtnToggle, QBadge, QSlider } from 'quasar'
 
 // 笔刷模式选项列表
 const BRUSH_MODE_OPTIONS = [
-  { icon: 'add', value: 1 },
-  { icon: 'remove', value: 2 },
+  { icon: 'add_circle_outline', value: 1 },
+  { icon: 'remove_circle_outline', value: 2 },
   { icon: 'edit', value: 3 },
   { icon: 'cleaning_services', value: 4 }
 ]

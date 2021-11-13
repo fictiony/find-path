@@ -7,7 +7,9 @@ import cfg from '../../package.json'
 const UI_STATE_INIT = {
   maximized: false, // 窗口是否最大化
   darkTheme: false, // 是否暗色界面
+  toolPanel: true, // 工具栏是否显示
   operatePanel: true, // 操作面板是否显示
+  toolPanelFloat: true, // 工具栏是否浮动
   operatePanelFloat: true, // 操作面板是否浮动
   operatePanelFold: false, // 操作面板是否收拢
   operatePanelRect: { x: 10, y: 40, width: 250, height: 400 }, // 操作面板位置大小
