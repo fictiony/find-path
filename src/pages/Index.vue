@@ -47,7 +47,7 @@ export default {
   computed: {
     ...mapStateRW('main', ['viewZoom']),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom']),
-    ...mapState('edit', ['xGrids', 'yGrids', 'brushMode']),
+    ...mapState('edit', ['xGrids', 'yGrids', 'brushMode', 'lockBrushDir']),
     ...mapStateRW('edit', ['brushPos']),
     ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight', 'getGridXY']),
 
@@ -120,9 +120,11 @@ export default {
         this.brushPos = pos
         if (this.brushDown) {
           if (this.brushDir === 0) {
-            this.brushDir = pos.x === this.brushDownPos.x ? 2 : 1
+            const dx = Math.abs(pos.x - this.brushDownPos.x)
+            const dy = Math.abs(pos.y - this.brushDownPos.y)
+            this.brushDir = dx > dy ? 1 : 2
           }
-          if (key.isPressed(16)) {
+          if (this.lockBrushDir || key.isPressed(16)) {
             // Shift键按下时锁定笔刷移动方向
             this.brushDraw({
               x: this.brushDir === 2 ? this.brushDownPos.x : pos.x,

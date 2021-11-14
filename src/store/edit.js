@@ -17,7 +17,8 @@ const state = () => ({
   // 计算公式为：(cos(π * D^(1-ln(S/50))^2) + 1) / 2，其中D/S分别表示距离/软度
   brushState: 200, // 笔刷状态值（1~200）
   brushStatesRefresh: 1, // 用于手动刷新笔刷格子状态列表（当笔刷类型为随机杂点时有用）
-  brushPos: null // 笔刷当前位置：{x, y}
+  brushPos: null, // 笔刷当前位置：{x, y}
+  lockBrushDir: false // 是否锁定笔刷移动方向
 })
 
 // ----------------------------------------------------------------------------【getters】
@@ -100,7 +101,8 @@ const mutations = {
     'brushSoft',
     'brushState',
     'brushStatesRefresh',
-    'brushPos'
+    'brushPos',
+    'lockBrushDir'
   ])
 }
 

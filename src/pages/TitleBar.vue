@@ -79,12 +79,17 @@ export default {
         shortcut: 'Ctrl+C',
         handler: vm.copyGrids
       },
-      null,
       {
         label: '清空网格',
         icon: 'delete_outline',
         shortcut: 'Ctrl+D',
         handler: vm.clearGrids
+      },
+      null,
+      {
+        label: '锁定水平垂直绘制',
+        icon: () => (vm.lockBrushDir ? 'done' : ''),
+        handler: () => (vm.lockBrushDir = !vm.lockBrushDir)
       }
     ],
     brushMenu: [
@@ -257,7 +262,7 @@ export default {
     ...mapState('main', ['appTitle', 'loading', 'maximized', 'viewZoom', 'uiZoom']),
     ...mapStateRW('main', ['darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom']),
-    ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState'])
+    ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir'])
   },
 
   watch: {
