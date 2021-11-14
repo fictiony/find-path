@@ -12,12 +12,12 @@ export default {
   inject: ['page'],
 
   computed: {
-    ...mapState('edit', ['gridSize', 'brushMode', 'brushSize', 'brushPos', 'brushDown']),
+    ...mapState('edit', ['gridSize', 'brushMode', 'brushSize', 'brushPos']),
     ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight']),
 
     // 是否显示
     visible() {
-      return !!this.brushPos && !!this.brushMode && !this.page.$refs.view.dragState && !this.brushDown
+      return !!this.brushPos && !!this.brushMode && !this.page.$refs.view.dragState && !this.page.brushDown
     },
 
     // 光标样式
@@ -25,7 +25,8 @@ export default {
       if (!this.brushPos) return
       return {
         left: this.brushPos.x * this.gridSize - this.halfGridWidth + 'px',
-        top: this.brushPos.y * this.gridSize - this.halfGridHeight + 'px'
+        top: this.brushPos.y * this.gridSize - this.halfGridHeight + 'px',
+        opacity: 0.8
       }
     },
 

@@ -38,14 +38,17 @@ export default {
   data: () => ({
     margin: 50, // 边缘留白
     halfViewWidth: 100, // 视图宽度的一半
-    halfViewHeight: 100 // 视图高度的一半
+    halfViewHeight: 100, // 视图高度的一半
+    brushDown: false, // 笔刷当前是否按下
+    brushDownPos: null, // 笔刷按下时的坐标
+    brushDir: 0 // 笔刷初始移动方向（用于锁定绘制方向）：0-未知/1-横向/2-纵向
   }),
 
   computed: {
     ...mapStateRW('main', ['viewZoom']),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom']),
     ...mapState('edit', ['xGrids', 'yGrids', 'brushMode']),
-    ...mapStateRW('edit', ['brushPos', 'brushDown']),
+    ...mapStateRW('edit', ['brushPos']),
     ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight', 'getGridXY']),
 
     // 是否显示绘制光标
@@ -93,6 +96,8 @@ export default {
 
       // 进行绘制
       this.brushDown = true
+      this.brushDownPos = { ...this.brushPos }
+      this.brushDir = 0
       this.brushDraw()
     },
 
@@ -108,12 +113,25 @@ export default {
     // 鼠标移动处理
     onMouseMove(e) {
       e = e.touches ? e.touches[0] || e.changedTouches[0] : e // 触点放开时没有touches，因此要改用changedTouches
-      const xy = this.pageToGridXY(e)
-      if (!xy) {
+      const pos = this.pageToGridXY(e)
+      if (!pos) {
         this.brushPos = null
-      } else if (!this.brushPos || this.brushPos.x !== xy.x || this.brushPos.y !== xy.y) {
-        this.brushPos = xy
-        this.brushDown && this.brushDraw()
+      } else if (!this.brushPos || this.brushPos.x !== pos.x || this.brushPos.y !== pos.y) {
+        this.brushPos = pos
+        if (this.brushDown) {
+          if (this.brushDir === 0) {
+            this.brushDir = pos.x === this.brushDownPos.x ? 2 : 1
+          }
+          if (key.isPressed(16)) {
+            // Shift键按下时锁定笔刷移动方向
+            this.brushDraw({
+              x: this.brushDir === 2 ? this.brushDownPos.x : pos.x,
+              y: this.brushDir === 1 ? this.brushDownPos.y : pos.y
+            })
+          } else {
+            this.brushDraw()
+          }
+        }
       }
     }
   },

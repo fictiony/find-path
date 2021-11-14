@@ -1,5 +1,5 @@
 <template>
-  <div class="q-px-sm q-py-xs row justify-center">
+  <div class="q-px-sm q-py-xs row justify-center no-scroll">
     <template v-for="i in BRUSH_MODES">
       <q-btn
         :key="'M@' + i.mode"

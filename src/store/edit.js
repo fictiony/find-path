@@ -16,8 +16,7 @@ const state = () => ({
   // 计算公式为：(cos(π * D^(1-ln(S/50))^2) + 1) / 2，其中D/S分别表示距离/软度
   brushState: 200, // 笔刷状态值（1~200）
   brushStatesRefresh: 1, // 用于手动刷新笔刷格子状态列表（当笔刷类型为随机杂点时有用）
-  brushPos: null, // 笔刷当前位置：{x, y}
-  brushDown: false // 笔刷当前是否按下
+  brushPos: null // 笔刷当前位置：{x, y}
 })
 
 // ----------------------------------------------------------------------------【getters】
@@ -100,8 +99,7 @@ const mutations = {
     'brushSoft',
     'brushState',
     'brushStatesRefresh',
-    'brushPos',
-    'brushDown'
+    'brushPos'
   ])
 }
 
@@ -114,10 +112,11 @@ const actions = {
   },
 
   // 笔刷涂点
-  async brushDraw ({ state, getters, commit }) {
+  // - @pos 指定坐标（未指定则取当前笔刷位置）
+  async brushDraw ({ state, getters, commit }, pos) {
     const { xGrids, yGrids, gridStates, brushMode, brushSize } = state
     if (!brushMode) return
-    const { x, y } = state.brushPos
+    const { x, y } = pos || state.brushPos
     const offset = Math.floor(brushSize / 2)
 
     // 绘制

@@ -25,9 +25,11 @@ export default {
 
     // 画布样式
     canvasStyle() {
+      const border = 2 * this.gridSize
       return {
-        width: this.xGrids * this.gridSize + 'px',
-        height: this.yGrids * this.gridSize + 'px',
+        width: this.xGrids * this.gridSize + border * 2 + 'px',
+        height: this.yGrids * this.gridSize + border * 2 + 'px',
+        border: border + 'px solid #6666',
         imageRendering: 'pixelated'
       }
     }
