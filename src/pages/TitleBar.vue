@@ -61,9 +61,29 @@ export default {
     },
     editMenu: [
       {
+        label: '加载网格',
+        icon: 'upload',
+        shortcut: 'Ctrl+L',
+        handler: vm.loadGrids
+      },
+      {
+        label: '保存网格',
+        icon: 'download',
+        shortcut: 'Ctrl+S',
+        handler: vm.saveGrids
+      },
+      null,
+      {
+        label: '复制网格',
+        icon: 'content_copy',
+        shortcut: 'Ctrl+C',
+        handler: vm.copyGrids
+      },
+      null,
+      {
         label: '清空网格',
         icon: 'delete_outline',
-        shortcut: 'Ctrl+X',
+        shortcut: 'Ctrl+D',
         handler: vm.clearGrids
       }
     ],
@@ -256,7 +276,7 @@ export default {
 
   methods: {
     ...mapActions('main', ['resetUIState', 'zoomView', 'zoomUI']),
-    ...mapActions('edit', ['clearGrids']),
+    ...mapActions('edit', ['loadGrids', 'saveGrids', 'copyGrids', 'clearGrids']),
 
     // 鼠标滑过菜单自动弹出
     hoverMenu(name) {

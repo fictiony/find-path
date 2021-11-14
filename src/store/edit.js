@@ -1,5 +1,6 @@
 // 【编辑相关】
-import { genMutations } from 'boot/utils'
+import { LocalStorage } from 'quasar'
+import { genMutations, notify, showMsg, setClipboardText } from 'boot/utils'
 
 // ----------------------------------------------------------------------------【state】
 const state = () => ({
@@ -105,6 +106,98 @@ const mutations = {
 
 // ----------------------------------------------------------------------------【actions】
 const actions = {
+  // 将当前格子状态表转为图片数据URL
+  // - @return 图片数据URL
+  async gridStatesToDataURL ({ state }) {
+    const { xGrids, yGrids, gridStates } = state
+
+    // 先转为图片数据（每3行格子状态分别记到各像素的RGB分量中，可最大程度形成连续同色点，提高PNG压缩率）
+    const imageData = new ImageData(xGrids, Math.ceil(yGrids / 3))
+    const data = imageData.data
+    for (let i = data.length - 1; i > 0; i -= 4) {
+      data[i] = 255 // Alpha统一用255（不用Alpha通道存格子状态，否则会造成RGB分量丢失）
+    }
+    for (const index in gridStates) {
+      if (!gridStates[index]) continue
+      const y = Math.floor(index / xGrids)
+      const i = ((index % xGrids) + Math.floor(y / 3) * xGrids) * 4 + (y % 3)
+      data[i] = gridStates[index]
+    }
+
+    // 再画到临时画布上
+    const canvas = document.createElement('canvas')
+    canvas.width = imageData.width
+    canvas.height = imageData.height
+    const ctx = canvas.getContext('2d')
+    ctx.putImageData(imageData, 0, 0)
+
+    return canvas.toDataURL()
+  },
+
+  // 将图片数据URL转为格子状态表
+  // - @dataURL 图片数据URL
+  // - @return 格子状态表
+  async dataURLToGridStates ({ state }, dataURL) {
+    return new Promise(resolve => {
+      const image = new Image()
+      image.onload = () => {
+        const w = image.naturalWidth
+        const h = image.naturalHeight
+
+        // 加载成功后，将图片画到临时画布上
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(image, 0, 0)
+
+        // 再从每个像素中取出RGB分量，分别对应3行格子的状态
+        const { data } = ctx.getImageData(0, 0, w, h)
+        const states = {}
+        for (let i = data.length - 1; i >= 0; i--) {
+          if (!data[i] || i % 4 === 3) continue
+          const index = Math.floor(i / 4)
+          const y = Math.floor(index / w) * 3 + (i % 4)
+          states[(index % w) + y * w] = data[i]
+        }
+
+        resolve(states)
+      }
+      image.src = dataURL
+    })
+  },
+
+  // 加载格子状态
+  async loadGrids ({ commit, dispatch }) {
+    const info = LocalStorage.getItem('FindPathGrids-1')
+    if (info) {
+      const [w, h] = info.size
+      const states = await dispatch('dataURLToGridStates', info.states)
+      commit('xGrids', w)
+      commit('yGrids', h)
+      commit('gridStates', states)
+      commit('dirtyArea', null)
+      notify('加载完成')
+    } else {
+      showMsg('加载失败！')
+    }
+  },
+
+  // 保存格子状态
+  async saveGrids ({ state, dispatch }) {
+    LocalStorage.set('FindPathGrids-1', {
+      size: [state.xGrids, state.yGrids],
+      states: await dispatch('gridStatesToDataURL')
+    })
+    notify('保存成功')
+  },
+
+  // 复制格子状态
+  async copyGrids ({ dispatch }) {
+    setClipboardText(await dispatch('gridStatesToDataURL'))
+    notify('已复制到剪贴板')
+  },
+
   // 清空格子状态
   async clearGrids ({ commit }) {
     commit('gridStates', {})

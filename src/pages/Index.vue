@@ -17,7 +17,7 @@
     @mousedown.native="$clearFocus"
     @mouseup.native="brushDown = false"
     @mousemove.native="onMouseMove"
-    @mouseout.native="brushPos = null"
+    @mouseout.native.self="brushPos = null"
     @touchstart.native.capture="onPress"
     @touchstart.native="$clearFocus"
     @touchend.native=";(brushPos = null), (brushDown = false)"
