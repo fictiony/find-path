@@ -11,7 +11,7 @@
 // 【操作面板】
 import { mapActions } from 'vuex'
 import { mapStateRW } from 'boot/utils'
-import { BRUSH_MODES, BRUSH_TYPES } from 'boot/draw'
+import { POINT_MODES, BRUSH_MODES, BRUSH_TYPES } from 'boot/draw'
 import { QBtnToggle, QBadge, QSlider } from 'quasar'
 
 export default {
@@ -24,6 +24,16 @@ export default {
         gridSize: { t: 'num', label: '格子边长', defVal: 20, minVal: 1, maxVal: 100, width: 60 }
       },
       {
+        pointMode: {
+          t: 'ctrl',
+          label: '选起止点',
+          tips: POINT_MODES.map(i => `${i.value}-${i.name}`).join(' / '),
+          component: QBtnToggle,
+          options: POINT_MODES,
+          clearable: true
+        }
+      },
+      {
         brushMode: {
           t: 'ctrl',
           label: '笔刷模式',
@@ -31,7 +41,9 @@ export default {
           component: QBtnToggle,
           options: BRUSH_MODES,
           clearable: true
-        },
+        }
+      },
+      {
         brushType: {
           t: 'ctrl',
           label: '笔刷样式',
@@ -82,7 +94,8 @@ export default {
   }),
 
   computed: {
-    ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState'])
+    ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'pointMode']),
+    ...mapStateRW('edit', ['brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState'])
   },
 
   methods: {

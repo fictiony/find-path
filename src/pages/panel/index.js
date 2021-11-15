@@ -17,7 +17,7 @@ export const FLOAT_PANEL_NAMES = Object.keys(FLOAT_PANEL)
 const FLOAT_PANEL_PARAMS = {
   tool: {
     y: 32,
-    width: 200,
+    width: 280,
     height: 42,
     minWidth: 0,
     minHeight: 0,

@@ -11,7 +11,8 @@ const state = () => ({
   gridStates: {}, // 格子状态表：{ 序号: 状态值 }，序号为：X坐标 + Y坐标 * 纵向格数， 状态值可为：1~100-不同程度的阻碍/101~200-绝对阻挡不可通过/其他-无阻挡
   dirtyArea: null, // 脏区域范围：[left, top, width, height]
 
-  brushMode: null, // 笔刷模式：1-叠加/2-扣除/3-合并/4-清除/null-无
+  pointMode: 0, // 起止点模式：1-指定起点/2-指定终点/null-无，pointMode优先级高于brushMode
+  brushMode: 1, // 笔刷模式：1-叠加/2-扣除/3-合并/4-清除/null-无
   brushType: 2, // 笔刷样式：1-方形/2-圆形/3-随机杂点/4-方形随机散布/5-圆形随机散布
   brushSize: 5, // 笔刷大小（1~200）
   brushSoft: 0, // 笔刷软度（0~100），值越大表示边缘越快渐变到1，0表示不渐变
@@ -100,6 +101,7 @@ const mutations = {
     'gridSize',
     'gridStates',
     'dirtyArea',
+    'pointMode',
     'brushMode',
     'brushType',
     'brushSize',

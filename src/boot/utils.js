@@ -668,7 +668,7 @@ export function notify (message, type = 'info', params = {}) {
 }
 Vue.prototype.$notify = notify
 Notify.registerType('info', {
-  position: 'top',
+  position: 'bottom',
   html: true,
   icon: 'info',
   color: 'grey-1',
@@ -676,7 +676,7 @@ Notify.registerType('info', {
   timeout: 2000
 })
 Notify.registerType('warn', {
-  position: 'top',
+  position: 'bottom',
   html: true,
   icon: 'warning',
   color: 'red-8',

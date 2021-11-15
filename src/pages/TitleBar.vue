@@ -34,7 +34,7 @@
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { mapStateRW } from 'boot/utils'
 import * as dlg from 'pages/dialog'
-import { BRUSH_MODES } from 'boot/draw'
+import { POINT_MODES, BRUSH_MODES } from 'boot/draw'
 import { Stats } from 'three-stats'
 
 // 浮动面板
@@ -86,12 +86,24 @@ export default {
       }
     ],
     brushMenu: [
+      ...POINT_MODES.map(i => {
+        return {
+          label: () => `指定${i.name}${vm.pointMode === i.value ? ' (当前)' : ''}`,
+          icon: i.icon,
+          shortcut: i.shortcut,
+          handler: () => (vm.pointMode = vm.pointMode === i.value ? null : i.value)
+        }
+      }),
+      null,
       ...BRUSH_MODES.map(i => {
         return {
           label: () => `${i.name}模式${vm.brushMode === i.value ? ' (当前)' : ''}`,
           icon: i.icon,
           shortcut: i.shortcut,
-          handler: () => (vm.brushMode = vm.brushMode === i.value ? null : i.value)
+          handler: () => {
+            vm.pointMode = null
+            vm.brushMode = vm.brushMode === i.value ? null : i.value
+          }
         }
       }),
       null,
@@ -255,7 +267,7 @@ export default {
     ...mapState('main', ['appTitle', 'loading', 'maximized', 'viewZoom', 'uiZoom']),
     ...mapStateRW('main', ['darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom']),
-    ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir'])
+    ...mapStateRW('edit', ['pointMode', 'brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir'])
   },
 
   watch: {

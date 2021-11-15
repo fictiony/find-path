@@ -4,6 +4,12 @@
 const OBSTACLE_COLOR = [150, 100, 0] // 不同程度的障碍（Alpha分量31~230表示程度）
 const WALL_COLOR = [150, 30, 60, 230] // 绝对阻挡不可通过
 
+// 起止点模式
+export const POINT_MODES = [
+  { value: 1, name: '起点', icon: 'call_split', shortcut: 'Q' },
+  { value: 2, name: '终点', icon: 'call_merge', shortcut: 'Z' }
+]
+
 // 笔刷模式
 export const BRUSH_MODES = [
   { value: 1, name: '叠加', icon: 'radio_button_checked', shortcut: 'A' },
