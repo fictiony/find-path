@@ -4,6 +4,23 @@
 const OBSTACLE_COLOR = [150, 100, 0] // 不同程度的障碍（Alpha分量31~230表示程度）
 const WALL_COLOR = [150, 30, 60, 230] // 绝对阻挡不可通过
 
+// 笔刷模式
+export const BRUSH_MODES = [
+  { value: 1, name: '叠加', icon: 'radio_button_checked', shortcut: 'A' },
+  { value: 2, name: '扣除', icon: 'radio_button_unchecked', shortcut: 'D' },
+  { value: 3, name: '合并', icon: 'edit', shortcut: 'C' },
+  { value: 4, name: '清除', icon: 'cleaning_services', shortcut: 'E' }
+]
+
+// 笔刷样式
+export const BRUSH_TYPES = [
+  { value: 1, name: '方形', icon: 'border_all' },
+  { value: 2, name: '圆形', icon: 'circle' },
+  { value: 3, name: '随机杂点', icon: 'blur_on' },
+  { value: 4, name: '随机散布(方形)', icon: 'apps' },
+  { value: 5, name: '随机散布(圆形)', icon: 'grain' }
+]
+
 // 格子状态值转格子颜色
 // - @state 格子状态值
 // - @return 格子颜色
@@ -50,11 +67,19 @@ export function intersectRect (x1, y1, w1, h1, x2, y2, w2, h2) {
   return [xa, ya, xb - xa, yb - ya]
 }
 
-// 计算两个矩形的合并区域
-// - @x1, y1, w1, h1 矩形1的坐标和宽高
-// - @x2, y2, w2, h2 矩形2的坐标和宽高
-// - @return [[x, y, w, h], ...] 合并区域的坐标和宽高（按纵向切成多个矩形）
+// 合并两个矩形区域
+// - @return [x, y, w, h] 合并区域的坐标和宽高
 export function mergeRect (x1, y1, w1, h1, x2, y2, w2, h2) {
+  const x = Math.min(x1, x2)
+  const y = Math.min(y1, y2)
+  const w = Math.max(x1 + w1, x2 + w2) - x
+  const h = Math.max(y1 + h1, y2 + h2) - y
+  return [x, y, w, h]
+}
+
+// 计算两个矩形区域的合并区域，并按横向切成最大的子矩形
+// - @return [[x, y, w, h], ...] 合并区域子矩形的坐标和宽高
+export function mergeRectSlice (x1, y1, w1, h1, x2, y2, w2, h2) {
   const [, y, w, h] = intersectRect(x1, y1, w1, h1, x2, y2, w2, h2)
   if (!w || !h) {
     // 无重合

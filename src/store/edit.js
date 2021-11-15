@@ -1,6 +1,7 @@
 // 【编辑相关】
 import { LocalStorage } from 'quasar'
 import { genMutations, notify, showMsg, setClipboardText } from 'boot/utils'
+import { mergeRect } from 'boot/draw'
 
 // ----------------------------------------------------------------------------【state】
 const state = () => ({
@@ -11,7 +12,7 @@ const state = () => ({
   dirtyArea: null, // 脏区域范围：[left, top, width, height]
 
   brushMode: null, // 笔刷模式：1-叠加/2-扣除/3-合并/4-清除/null-无
-  brushType: 2, // 笔刷样式：1-正方形/2-圆形/3-随机杂点
+  brushType: 2, // 笔刷样式：1-方形/2-圆形/3-随机杂点/4-方形随机散布/5-圆形随机散布
   brushSize: 5, // 笔刷大小（1~200）
   brushSoft: 0, // 笔刷软度（0~100），值越大表示边缘越快渐变到1，0表示不渐变
   // 计算公式为：(cos(π * D^(1-ln(S/50))^2) + 1) / 2，其中D/S分别表示距离/软度
@@ -46,12 +47,18 @@ const getters = {
     }
   },
 
+  // 是否为方形笔刷
+  isSquareBrush (state) {
+    return state.brushType === 1 || state.brushType === 4
+  },
+
   // 笔刷格子状态列表（预先计算好）
-  brushStates (state) {
+  brushStates (state, getters) {
     if (!state.brushStatesRefresh) return
     const { brushType, brushSize, brushSoft, brushState } = state
-    const states = new Array(brushSize * brushSize)
-    if (brushType === 1 && brushSoft === 0) {
+    const square = getters.isSquareBrush
+    const states = new Array(brushSize ** 2)
+    if (square && brushSoft === 0) {
       states.fill(brushState)
     } else {
       const c = (brushSize - 1) / 2
@@ -59,7 +66,9 @@ const getters = {
         for (let x = 0; x < brushSize; x++) {
           let d // 距离与半径的比值
           let s = brushState // 当前格子的状态值
-          if (brushType > 1) {
+          if (square) {
+            d = Math.max(Math.abs(x - c), Math.abs(y - c)) / (c + 0.5)
+          } else {
             d = Math.hypot(x - c, y - c) / (c + 0.5)
             if (d > 1) {
               s = 0
@@ -69,15 +78,11 @@ const getters = {
                 s = 0
               }
             }
-          } else if (brushSoft > 0) {
-            d = Math.max(Math.abs(x - c), Math.abs(y - c)) / (c + 0.5)
           }
           if (s > 0 && brushSoft > 0) {
             const ratio = (1 - Math.log(brushSoft / 50)) ** 2
-            s = Math.max(
-              1,
-              Math.round((Math.cos(Math.PI * d ** ratio) + 1) * (s / 2))
-            )
+            s = Math.round((Math.cos(Math.PI * d ** ratio) + 1) * (s / 2))
+            if (s < 1) s = 1
           }
           states[i++] = s
         }
@@ -211,47 +216,67 @@ const actions = {
   async brushDraw ({ state, getters, commit }, pos) {
     const { xGrids, yGrids, gridStates, brushMode, brushSize } = state
     if (!brushMode) return
-    const { x, y } = pos || state.brushPos
     const offset = Math.floor(brushSize / 2)
+    let dirtyArea
 
-    // 绘制
-    getters.brushStates.forEach((state, index) => {
-      if (!state) return
-      const bx = x - offset + (index % brushSize)
-      if (bx < 0 || bx >= xGrids) return
-      const by = y - offset + Math.floor(index / brushSize)
-      if (by < 0 || by >= yGrids) return
-      index = bx + by * xGrids
-      const oldState = gridStates[index] || 0
-      switch (brushMode) {
-        case 1: // 叠加
-          gridStates[index] = Math.min(200, oldState + state)
-          break
-        case 2: // 扣除
-          gridStates[index] = Math.max(0, oldState - state)
-          break
-        case 3: // 合并
-          gridStates[index] = Math.max(oldState, state)
-          break
-        case 4: // 清除
-          gridStates[index] = 0
-          break
+    // 计算要绘制的位置（单点时取指定位置或当前笔刷位置，散布时取能覆盖1%区域的随机点）
+    const posList = []
+    if (state.brushType > 3) {
+      const num = Math.ceil((xGrids * yGrids) / brushSize ** 2 / 100)
+      for (let i = num; i > 0; i--) {
+        posList.push({
+          x: Math.floor(Math.random() * xGrids),
+          y: Math.floor(Math.random() * yGrids)
+        })
       }
+    } else {
+      posList.push(pos || state.brushPos)
+    }
+
+    // 进行绘制
+    posList.forEach(({ x, y }) => {
+      getters.brushStates.forEach((state, index) => {
+        if (!state) return
+        const bx = x - offset + (index % brushSize)
+        if (bx < 0 || bx >= xGrids) return
+        const by = y - offset + Math.floor(index / brushSize)
+        if (by < 0 || by >= yGrids) return
+
+        // 更新格子状态
+        index = bx + by * xGrids
+        const oldState = gridStates[index] || 0
+        switch (brushMode) {
+          case 1: // 叠加
+            gridStates[index] = Math.min(200, oldState + state)
+            break
+          case 2: // 扣除
+            gridStates[index] = Math.max(0, oldState - state)
+            break
+          case 3: // 合并
+            gridStates[index] = Math.max(oldState, state)
+            break
+          case 4: // 清除
+            gridStates[index] = 0
+            break
+        }
+
+        // 合并脏区域
+        const rect = [x - offset, y - offset, brushSize, brushSize]
+        if (dirtyArea) {
+          dirtyArea = mergeRect(...rect, ...dirtyArea)
+        } else {
+          dirtyArea = rect
+        }
+      })
     })
 
     // 更新脏区域
-    const area = [x - offset, y - offset, brushSize, brushSize]
     if (state.dirtyArea) {
-      const [x1, y1, w1, h1] = state.dirtyArea
-      const [x2, y2, w2, h2] = area
-      area[0] = Math.min(x1, x2)
-      area[1] = Math.min(y1, y2)
-      area[2] = Math.max(x1 + w1, x2 + w2) - area[0]
-      area[3] = Math.max(y1 + h1, y2 + h2) - area[1]
+      dirtyArea = mergeRect(...state.dirtyArea, ...dirtyArea)
     }
-    commit('dirtyArea', area)
+    commit('dirtyArea', dirtyArea)
 
-    // 若笔刷样式为随机，则每画一笔刷新一次
+    // 若笔刷样式为随机杂点，则每画一笔刷新一次
     if (state.brushType === 3) {
       commit('brushStatesRefresh', state.brushStatesRefresh + 1)
     }

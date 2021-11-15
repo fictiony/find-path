@@ -11,22 +11,8 @@
 // 【操作面板】
 import { mapActions } from 'vuex'
 import { mapStateRW } from 'boot/utils'
+import { BRUSH_MODES, BRUSH_TYPES } from 'boot/draw'
 import { QBtnToggle, QBadge, QSlider } from 'quasar'
-
-// 笔刷模式选项列表
-const BRUSH_MODE_OPTIONS = [
-  { icon: 'add_circle_outline', value: 1 },
-  { icon: 'remove_circle_outline', value: 2 },
-  { icon: 'edit', value: 3 },
-  { icon: 'cleaning_services', value: 4 }
-]
-
-// 笔刷样式选项列表
-const BRUSH_TYPE_OPTIONS = [
-  { icon: 'border_all', value: 1 },
-  { icon: 'circle', value: 2 },
-  { icon: 'blur_on', value: 3 }
-]
 
 export default {
   data: vm => ({
@@ -41,12 +27,18 @@ export default {
         brushMode: {
           t: 'ctrl',
           label: '笔刷模式',
-          tips: '1-叠加 / 2-扣除 / 3-合并 / 4-清除',
+          tips: BRUSH_MODES.map(i => `${i.value}-${i.name}`).join(' / '),
           component: QBtnToggle,
-          options: BRUSH_MODE_OPTIONS,
+          options: BRUSH_MODES,
           clearable: true
         },
-        brushType: { t: 'ctrl', label: '笔刷样式', tips: '1-正方形 / 2-圆形 / 3-随机杂点', component: QBtnToggle, options: BRUSH_TYPE_OPTIONS }
+        brushType: {
+          t: 'ctrl',
+          label: '笔刷样式',
+          tips: BRUSH_TYPES.map(i => `${i.value}-${i.name}`).join(' / '),
+          component: QBtnToggle,
+          options: BRUSH_TYPES
+        }
       },
       {
         brushSize: { t: 'ctrl', label: '笔刷大小', ctrlClass: 'q-ml-sm', component: QSlider, width: 100, min: 1, max: 200, snap: true },

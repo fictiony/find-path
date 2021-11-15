@@ -34,15 +34,8 @@
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { mapStateRW } from 'boot/utils'
 import * as dlg from 'pages/dialog'
+import { BRUSH_MODES } from 'boot/draw'
 import { Stats } from 'three-stats'
-
-// 笔刷模式
-const BRUSH_MODES = [
-  { mode: 1, name: '叠加模式', icon: 'add_circle_outline', shortcut: 'A' },
-  { mode: 2, name: '扣除模式', icon: 'remove_circle_outline', shortcut: 'D' },
-  { mode: 3, name: '合并模式', icon: 'edit', shortcut: 'C' },
-  { mode: 4, name: '清除模式', icon: 'cleaning_services', shortcut: 'E' }
-]
 
 // 浮动面板
 const FLOAT_PANELS = {
@@ -93,12 +86,12 @@ export default {
       }
     ],
     brushMenu: [
-      ...BRUSH_MODES.map(({ mode, name, icon, shortcut }) => {
+      ...BRUSH_MODES.map(i => {
         return {
-          label: () => name + (vm.brushMode === mode ? '（当前）' : ''),
-          icon,
-          shortcut,
-          handler: () => (vm.brushMode = vm.brushMode === mode ? null : mode)
+          label: () => `${i.name}模式${vm.brushMode === i.value ? ' (当前)' : ''}`,
+          icon: i.icon,
+          shortcut: i.shortcut,
+          handler: () => (vm.brushMode = vm.brushMode === i.value ? null : i.value)
         }
       }),
       null,

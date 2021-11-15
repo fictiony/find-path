@@ -1,15 +1,15 @@
 <template>
   <div class="q-px-sm q-py-xs row justify-center no-scroll">
-    <template v-for="i in BRUSH_MODES">
+    <template v-for="i in TOOL_BTNS">
       <q-btn
-        :key="'M@' + i.mode"
-        :style="btnStyle('M@' + i.mode)"
+        :key="i.id"
+        :style="btnStyle(i.id)"
         round
         flat
         dense
         :icon="i.icon"
-        @click="brushMode = i.mode"
-        @mouseover="hoverBtnId = 'M@' + i.mode"
+        @click="brushMode = i.value"
+        @mouseover="hoverBtnId = i.id"
         @mouseout="hoverBtnId = null"
         v-if="typeof i === 'object'"
       >
@@ -24,20 +24,18 @@
 // 【工具栏】
 import { mapState } from 'vuex'
 import { mapStateRW } from 'boot/utils'
+import { BRUSH_MODES } from 'boot/draw'
 
-// 笔刷模式
-const BRUSH_MODES = [
-  { mode: null, icon: 'pan_tool', tips: '自由拖拽视图（按住空格键时自动进入）' },
+// 工具按钮
+const TOOL_BTNS = [
+  { id: 'M@null', value: null, icon: 'pan_tool', tips: '自由拖拽视图（按住空格键时自动进入）' },
   's1',
-  { mode: 1, icon: 'add_circle_outline', tips: '笔刷模式：叠加' },
-  { mode: 2, icon: 'remove_circle_outline', tips: '笔刷模式：扣除' },
-  { mode: 3, icon: 'edit', tips: '笔刷模式：合并' },
-  { mode: 4, icon: 'cleaning_services', tips: '笔刷模式：清除' }
+  ...BRUSH_MODES.map(i => ({ id: 'M@' + i.value, value: i.value, icon: i.icon, tips: '笔刷模式 - ' + i.name }))
 ]
 
 export default {
   data: () => ({
-    BRUSH_MODES,
+    TOOL_BTNS,
     hoverBtnId: null // 当前鼠标悬停的按钮标识
   }),
 
