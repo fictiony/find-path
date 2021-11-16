@@ -5,9 +5,9 @@ export default class PathNode {
   y = 0 // 节点Y坐标
   id = 0 // 节点ID
   cost = 1 // 消耗系数（值越大则路径优先级越低，可对应地形难度）
-  neighbors = null // 相邻节点表：{ 节点ID: 距离 }，null表示自动计算
+  neighbors = null // 相邻节点距离表：{ 节点ID: 距离消耗（= 间距 * 消耗系数和 / 2）}，null表示自动计算
   parentId = null // 父节点ID
-  distance = 0 // 路径长度（路径中所有相邻节点距离 * 消耗系数（取前后两节点平均值）的总和）
+  distance = 0 // 路径长度（路径中所有相邻节点的距离消耗总和）
   heurist = null // 启发函数值（null表示尚未计算）
   priority = 0 // 优先级
   openVer = 0 // 开启状态版本号

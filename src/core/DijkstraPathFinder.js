@@ -51,9 +51,9 @@ export default class DijkstraPathFinder extends BasePathFinder {
         return this.backtrace(node).reverse()
       }
 
-      // 将相邻节点加入开启列表
-      this.getNeighbors(node).forEach(i => {
-        if (node.closeVer === ver) continue
+      // TODO 将相邻节点加入开启列表
+      this.getNeighbors(node).forEach(n => {
+        if (n.closeVer === ver) continue
 
       })
     }

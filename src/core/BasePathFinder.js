@@ -47,15 +47,19 @@ export default class BasePathFinder {
     const neighbors = []
     const { distance, cost } = node
 
-    // 已指定则直接返回
-    const dists = node.neighbors
-    if (dists) {
-      for (const id in dists) {
+    // 已存在则直接获取节点，并更新节点路径长度
+    let stepCosts = node.neighbors
+    if (stepCosts) {
+      for (const id in stepCosts) {
         const neighbor = this.getNode(id)
-        neighbor.distance = distance + (dists[id] * (cost + neighbor.cost)) / 2
+        neighbor.distance = distance + stepCosts[id]
         neighbors.push(neighbor)
       }
+
+      // 否则自动检测
     } else {
+      stepCosts = {}
+
       // 按顺序查找四周
       // 5 1 6
       // 2 + 3
@@ -88,6 +92,15 @@ export default class BasePathFinder {
         if (!n7 && (n7 = this.getNodeAt(x - 1, y + 1))) neighbors.push(n7)
         if (!n8 && (n8 = this.getNodeAt(x + 1, y + 1))) neighbors.push(n8)
       }
+
+      // 更新相邻节点列表，和各个相邻节点的路径长度
+      neighbors.forEach(n => {
+        const step = n.x === x || n.y === y ? 1 : Math.SQRT2
+        const stepCost = (cost + n.cost) * (step / 2)
+        stepCosts[n.id] = stepCost
+        n.distance = distance + stepCost
+      })
+      node.neighbors = stepCosts
     }
 
     return neighbors
