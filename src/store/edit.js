@@ -11,7 +11,24 @@ const state = () => ({
   gridStates: {}, // 格子状态表：{ 序号: 状态值 }，序号为：X坐标 + Y坐标 * 纵向格数， 状态值可为：1~100-不同程度的阻碍/101~200-绝对阻挡不可通过/其他-无阻挡
   dirtyArea: null, // 脏区域范围：[left, top, width, height]
 
+  algorithm: 'astar_o_heap', // 当前算法类型：
+  // astar_h - A*寻路（曼哈顿距离）
+  // astar_e - A*寻路（欧几里德距离）
+  // astar_o - A*寻路（45°角距离）
+  // astar_c - A*寻路（切比雪夫距离）
+  // astar_h_heap - A*寻路（曼哈顿距离 + 二叉堆排序）
+  // astar_e_heap - A*寻路（欧几里德距离 + 二叉堆排序）
+  // astar_o_heap - A*寻路（45°角距离 + 二叉堆排序）
+  // astar_c_heap - A*寻路（切比雪夫距离 + 二叉堆排序）
+  // dijkstra - 最短路径寻路
+  // dijkstra_heap - 最短路径寻路（二叉堆排序）
+  diagonalMove: 2, // 是否可走对角线：0-不可走/1-无阻挡可走/2-非全阻挡可走/3-始终可走
+  showState: false, // 寻路时是否显示实时状态（即节点开启关闭状态）
+  showDelay: 0, // 显示每个寻路实时状态的延时时间（毫秒）
   pointMode: 0, // 起止点模式：1-指定起点/2-指定终点/null-无，pointMode优先级高于brushMode
+  startPos: null, // 当前寻路起点坐标：{x, y}
+  endPos: null, // 当前寻路终点坐标：{x, y}
+
   brushMode: 1, // 笔刷模式：1-叠加/2-扣除/3-合并/4-清除/null-无
   brushType: 2, // 笔刷样式：1-方形/2-圆形/3-随机杂点/4-方形随机散布/5-圆形随机散布
   brushSize: 5, // 笔刷大小（1~200）
@@ -90,7 +107,10 @@ const getters = {
       }
     }
     return states
-  }
+  },
+
+  // 寻路算法对象
+  pathFinder (state, getters) {}
 }
 
 // ----------------------------------------------------------------------------【mutations】
@@ -101,7 +121,13 @@ const mutations = {
     'gridSize',
     'gridStates',
     'dirtyArea',
+    'algorithm',
+    'diagonalMove',
+    'showState',
+    'showDelay',
     'pointMode',
+    'startPos',
+    'endPos',
     'brushMode',
     'brushType',
     'brushSize',
@@ -282,7 +308,17 @@ const actions = {
     if (state.brushType === 3) {
       commit('brushStatesRefresh', state.brushStatesRefresh + 1)
     }
-  }
+  },
+
+  // 清除起点终点
+  async clearPoints ({ commit }) {
+    commit('startPos', null)
+    commit('endPos', null)
+    commit('pointMode', 1)
+  },
+
+  // TODO 寻路
+  async findPath () {}
 }
 
 export default {

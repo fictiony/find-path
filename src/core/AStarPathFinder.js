@@ -5,7 +5,7 @@
 //   1. 曼哈顿距离（dx + dy）
 //   2. 欧几里德距离（sqrt(dx² + dy²)）
 //   3. 45°角距离（|dx - dy| + min(dx, dy) * √2）
-//   2. 切比雪夫距离（max(dx + dy)）
+//   4. 切比雪夫距离（max(dx + dy)）
 
 import DijkstraPathFinder from './DijkstraPathFinder'
 

@@ -7,7 +7,7 @@
         <template v-else>{{ tips }}</template>
       </q-tooltip>
     </label>
-    <component ref="ctrl" :is="component" :class="ctrlClass" :style="combineCtrlStyle" v-bind="$attrs" v-on="$listeners" />
+    <component ref="ctrl" :is="component" :class="ctrlClass" :style="combineCtrlStyle" v-bind="combineParams" v-on="$listeners" />
     <slot />
   </div>
 </template>
@@ -30,6 +30,7 @@ export default {
     },
     ctrlClass: [String, Array, Object], // 控件样式
     ctrlStyle: Object,
+    ctrlParams: Object, // 控件参数表
     width: Number, // 控件最小宽度
     maxWidth: Number // 控件最大宽度
   },
@@ -50,6 +51,11 @@ export default {
         style.maxWidth = this.maxWidth + 'px'
       }
       return style
+    },
+
+    // 合并后的控件参数表
+    combineParams() {
+      return { ...this.$attrs, ...this.ctrlParams }
     }
   }
 }

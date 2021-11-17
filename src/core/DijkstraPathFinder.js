@@ -12,16 +12,22 @@ function comparePriority (nodeA, nodeB) {
 }
 
 export default class DijkstraPathFinder extends BasePathFinder {
-  openNodes = null // 节点开启列表
+  openNodes = null // 开启节点有序列表
   findPathVer = 0 // 当前寻路版本号（每次寻路递增1，这样可以省略每次寻路前节点开启关闭状态的重置处理）
+  openNotify = null // 节点开启通知函数，参数为：(节点, true)
+  closeNotify = null // 节点关闭通知函数，参数为：(节点, false)
 
   // 构造函数
   // - @options 功能选项增加：
   //    heapSort: 节点优先级是否采用二叉堆排序，否则用数组快速排序（当节点数多时二叉堆排序可显著提升性能），默认为true
+  //    openNotify: 节点开启通知函数（可选）
+  //    closeNotify: 节点关闭通知函数（可选）
   constructor (genNode, options = {}) {
     super(genNode, options)
     const heapSort = 'heapSort' in options ? options.heapSort : true
     this.openNodes = new SortedNodes(comparePriority, heapSort)
+    this.openNotify = options.openNotify
+    this.closeNotify = options.closeNotify
   }
 
   // 重置状态缓存（重载）
@@ -41,9 +47,10 @@ export default class DijkstraPathFinder extends BasePathFinder {
     const ver = ++this.findPathVer
 
     // 从起始节点开始搜索
-    const openNodes = this.openNodes
+    const { openNodes, openNotify, closeNotify } = this
     for (let node = startNode; node; node = openNodes.pop()) {
       node.closeVer = ver
+      closeNotify && closeNotify(node, false)
 
       // 到达目标点则结束寻路
       if (node === targetNode) {
@@ -68,6 +75,7 @@ export default class DijkstraPathFinder extends BasePathFinder {
         } else {
           openNodes.push(n)
           n.openVer = ver
+          openNotify && openNotify(n, true)
         }
       })
     }

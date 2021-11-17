@@ -12,12 +12,12 @@ export default {
   inject: ['page'],
 
   computed: {
-    ...mapState('edit', ['gridSize', 'brushMode', 'brushSize', 'brushPos']),
+    ...mapState('edit', ['gridSize', 'pointMode', 'brushMode', 'brushSize', 'brushPos']),
     ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight']),
 
     // 是否显示
     visible() {
-      return !!this.brushPos && !!this.brushMode && !this.page.$refs.view.dragState && !this.page.brushDown
+      return !this.pointMode && !!this.brushMode && !!this.brushPos && !this.page.isDragging && !this.page.brushDown
     },
 
     // 光标样式

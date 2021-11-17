@@ -8,7 +8,7 @@ export default class BasePathFinder {
 
   // 构造函数
   // - @options 功能选项，可包含：
-  //    diagonalMove: 是否可走对角线，可为：0-不可走（默认）/1-无阻挡可走/2-非全阻挡可走/3-始终可走
+  //    diagonalMove: 是否可走对角线：0-不可走（默认）/1-无阻挡可走/2-非全阻挡可走/3-始终可走
   constructor (genNode, options = {}) {
     if (new.target === BasePathFinder) {
       throw new Error('基类不能实例化')

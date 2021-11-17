@@ -12,7 +12,7 @@ const UI_STATE_INIT = {
   toolPanelFloat: true, // 工具栏是否浮动
   operatePanelFloat: true, // 操作面板是否浮动
   operatePanelFold: false, // 操作面板是否收拢
-  operatePanelRect: { x: 10, y: 40, width: 260, height: 500 }, // 操作面板位置大小
+  operatePanelRect: { x: 10, y: 40, width: 260, height: 600 }, // 操作面板位置大小
   viewZoom: 1.0, // 视图缩放比率
   uiZoom: 1.0 // 界面缩放比率
 }

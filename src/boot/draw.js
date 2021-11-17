@@ -4,28 +4,52 @@
 const OBSTACLE_COLOR = [150, 100, 0] // 不同程度的障碍（Alpha分量31~230表示程度）
 const WALL_COLOR = [150, 30, 60, 230] // 绝对阻挡不可通过
 
+// 算法类型
+export const ALGORITHMS = Object.freeze([
+  { value: 'astar', label: 'A*寻路' },
+  { value: 'astar_h', label: 'A*寻路（曼哈顿距离）' },
+  { value: 'astar_e', label: 'A*寻路（欧几里德距离）' },
+  { value: 'astar_o', label: 'A*寻路（45°角距离）' },
+  { value: 'astar_c', label: 'A*寻路（切比雪夫距离）' },
+  { value: 'astar_heap', label: 'A*寻路（二叉堆排序）' },
+  { value: 'astar_h_heap', label: 'A*寻路（曼哈顿距离 + 二叉堆排序）' },
+  { value: 'astar_e_heap', label: 'A*寻路（欧几里德距离 + 二叉堆排序）' },
+  { value: 'astar_o_heap', label: 'A*寻路（45°角距离 + 二叉堆排序）' },
+  { value: 'astar_c_heap', label: 'A*寻路（切比雪夫距离 + 二叉堆排序）' },
+  { value: 'dijkstra', label: '最短路径寻路' },
+  { value: 'dijkstra_heap', label: '最短路径寻路（二叉堆排序）' }
+])
+
+// 对角线可走类型
+export const DIAGONAL_MOVES = Object.freeze([
+  { value: 0, label: '不可走' },
+  { value: 1, label: '无阻挡可走' },
+  { value: 2, label: '非全阻挡可走' },
+  { value: 3, label: '始终可走' }
+])
+
 // 起止点模式
-export const POINT_MODES = [
+export const POINT_MODES = Object.freeze([
   { value: 1, name: '起点', icon: 'logout', shortcut: 'Q' },
   { value: 2, name: '终点', icon: 'login', shortcut: 'Z' }
-]
+])
 
 // 笔刷模式
-export const BRUSH_MODES = [
+export const BRUSH_MODES = Object.freeze([
   { value: 1, name: '叠加', icon: 'radio_button_checked', shortcut: 'A' },
   { value: 2, name: '扣除', icon: 'radio_button_unchecked', shortcut: 'D' },
   { value: 3, name: '合并', icon: 'edit', shortcut: 'C' },
   { value: 4, name: '清除', icon: 'cleaning_services', shortcut: 'E' }
-]
+])
 
 // 笔刷样式
-export const BRUSH_TYPES = [
+export const BRUSH_TYPES = Object.freeze([
   { value: 1, name: '方形', icon: 'border_all' },
   { value: 2, name: '圆形', icon: 'circle' },
   { value: 3, name: '随机杂点', icon: 'blur_on' },
   { value: 4, name: '随机散布(方形)', icon: 'apps' },
   { value: 5, name: '随机散布(圆形)', icon: 'grain' }
-]
+])
 
 // 格子状态值转格子颜色
 // - @state 格子状态值

@@ -47,13 +47,18 @@ export default {
   computed: {
     ...mapStateRW('main', ['viewZoom']),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom']),
-    ...mapState('edit', ['xGrids', 'yGrids', 'brushMode', 'lockBrushDir']),
+    ...mapState('edit', ['xGrids', 'yGrids', 'pointMode', 'brushMode', 'lockBrushDir']),
     ...mapStateRW('edit', ['brushPos']),
     ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight', 'getGridXY']),
 
+    // 是否正在拖拽视图
+    isDragging() {
+      return !!(this.$refs.view && this.$refs.view.dragState)
+    },
+
     // 是否显示绘制光标
     showDrawCursor() {
-      return this.brushDown || (!!this.brushPos && !!this.brushMode && !this.$refs.view.dragState)
+      return this.brushDown || !!((this.pointMode || this.brushMode) && this.brushPos && !this.isDragging)
     }
   },
 
@@ -85,7 +90,7 @@ export default {
     // 按下处理
     onPress(e) {
       this.onMouseMove(e)
-      if (!this.brushMode || !this.brushPos) return // 未选笔刷模式或起点不在网格中时不进行绘制
+      if (!(this.pointMode || this.brushMode) || !this.brushPos) return // 未选起止点模式或笔刷模式或起点不在网格中时不进行绘制
       if (key.isPressed(32)) return // 空格键按下时改为拖拽视图
 
       // 屏蔽视图拖拽
@@ -94,11 +99,16 @@ export default {
         this.$refs.view.$forceSet('interactive', true)
       })
 
-      // 进行绘制
-      this.brushDown = true
-      this.brushDownPos = { ...this.brushPos }
-      this.brushDir = 0
-      this.brushDraw()
+      // 若已选起止点模式，则优先设置起止点
+      if (this.pointMode) {
+        // TODO
+      } else {
+        // 进行绘制
+        this.brushDown = true
+        this.brushDownPos = { ...this.brushPos }
+        this.brushDir = 0
+        this.brushDraw()
+      }
     },
 
     // 拖拽处理

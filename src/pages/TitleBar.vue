@@ -34,7 +34,7 @@
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { mapStateRW } from 'boot/utils'
 import * as dlg from 'pages/dialog'
-import { POINT_MODES, BRUSH_MODES } from 'boot/draw'
+import { ALGORITHMS, DIAGONAL_MOVES, POINT_MODES, BRUSH_MODES } from 'boot/draw'
 import { Stats } from 'three-stats'
 
 // 浮动面板
@@ -47,45 +47,29 @@ const FLOAT_PANELS = {
 export default {
   data: vm => ({
     mainMenu: {
+      findPathMenu: { label: '寻路', open: false },
+      obstacleMenu: { label: '障碍', open: false },
       editMenu: { label: '编辑', open: false },
-      brushMenu: { label: '笔刷', open: false },
       viewMenu: { label: '视图', open: false },
       helpMenu: { label: '帮助', open: false }
     },
-    editMenu: [
-      {
-        label: '加载网格',
-        icon: 'upload',
-        shortcut: 'Ctrl+L',
-        handler: vm.loadGrids
-      },
-      {
-        label: '保存网格',
-        icon: 'download',
-        shortcut: 'Ctrl+S',
-        handler: vm.saveGrids
-      },
+    findPathMenu: [
+      ...ALGORITHMS.map(i => {
+        return {
+          label: i.label,
+          icon: () => (vm.algorithm === i.value ? 'done' : ''),
+          handler: () => (vm.algorithm = i.value)
+        }
+      }),
       null,
-      {
-        label: '复制网格',
-        icon: 'content_copy',
-        shortcut: 'Ctrl+C',
-        handler: vm.copyGrids
-      },
-      {
-        label: '清空网格',
-        icon: 'delete_outline',
-        shortcut: 'Ctrl+D',
-        handler: vm.clearGrids
-      },
+      ...DIAGONAL_MOVES.map(i => {
+        return {
+          label: i.label,
+          icon: () => (vm.diagonalMove === i.value ? 'done' : ''),
+          handler: () => (vm.diagonalMove = i.value)
+        }
+      }),
       null,
-      {
-        label: '锁定水平垂直绘制',
-        icon: () => (vm.lockBrushDir ? 'done' : ''),
-        handler: () => (vm.lockBrushDir = !vm.lockBrushDir)
-      }
-    ],
-    brushMenu: [
       ...POINT_MODES.map(i => {
         return {
           label: () => `指定${i.name}${vm.pointMode === i.value ? ' (当前)' : ''}`,
@@ -94,7 +78,28 @@ export default {
           handler: () => (vm.pointMode = vm.pointMode === i.value ? null : i.value)
         }
       }),
+      {
+        label: '清除起点终点',
+        icon: 'clear',
+        shortcut: 'Esc',
+        handler: vm.clearPoints
+      },
       null,
+      {
+        label: '进行寻路', // 暂停寻路、继续寻路
+        icon: 'play_arrow',
+        shortcut: 'F9',
+        handler: vm.findPath,
+        disable: () => !vm.startPos || !vm.endPos
+      },
+      {
+        label: '显示寻路状态',
+        shortcut: 'F6',
+        icon: () => (vm.showState ? 'done' : ''),
+        handler: () => (vm.showState = !vm.showState)
+      }
+    ],
+    obstacleMenu: [
       ...BRUSH_MODES.map(i => {
         return {
           label: () => `${i.name}模式${vm.brushMode === i.value ? ' (当前)' : ''}`,
@@ -159,6 +164,39 @@ export default {
         icon: 'filter_9_plus',
         shortcut: '`',
         handler: () => (vm.brushState = 200)
+      }
+    ],
+    editMenu: [
+      {
+        label: '加载网格',
+        icon: 'upload',
+        shortcut: 'Ctrl+L',
+        handler: vm.loadGrids
+      },
+      {
+        label: '保存网格',
+        icon: 'download',
+        shortcut: 'Ctrl+S',
+        handler: vm.saveGrids
+      },
+      null,
+      {
+        label: '复制网格',
+        icon: 'content_copy',
+        shortcut: 'Ctrl+C',
+        handler: vm.copyGrids
+      },
+      {
+        label: '清空网格',
+        icon: 'delete_outline',
+        shortcut: 'Ctrl+D',
+        handler: vm.clearGrids
+      },
+      null,
+      {
+        label: '锁定水平垂直绘制',
+        icon: () => (vm.lockBrushDir ? 'done' : ''),
+        handler: () => (vm.lockBrushDir = !vm.lockBrushDir)
       }
     ],
     viewMenu: [
@@ -267,7 +305,9 @@ export default {
     ...mapState('main', ['appTitle', 'loading', 'maximized', 'viewZoom', 'uiZoom']),
     ...mapStateRW('main', ['darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom']),
-    ...mapStateRW('edit', ['pointMode', 'brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir'])
+    ...mapState('edit', ['startPos', 'endPos']),
+    ...mapStateRW('edit', ['algorithm', 'diagonalMove', 'showState', 'pointMode']),
+    ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir'])
   },
 
   watch: {
@@ -286,7 +326,7 @@ export default {
 
   methods: {
     ...mapActions('main', ['resetUIState', 'zoomView', 'zoomUI']),
-    ...mapActions('edit', ['loadGrids', 'saveGrids', 'copyGrids', 'clearGrids']),
+    ...mapActions('edit', ['loadGrids', 'saveGrids', 'copyGrids', 'clearGrids', 'clearPoints', 'findPath']),
 
     // 鼠标滑过菜单自动弹出
     hoverMenu(name) {
