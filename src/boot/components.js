@@ -32,6 +32,8 @@ import {
 import EditHint from 'components/EditHint.vue'
 import BrushPattern from 'components/BrushPattern.vue'
 import BrushCursor from 'components/BrushCursor.vue'
+import PointPos from 'components/PointPos.vue'
+import MarkLayer from 'components/MarkLayer.vue'
 
 // 注册组件
 const components = {
@@ -58,7 +60,9 @@ const components = {
 
   EditHint,
   BrushPattern,
-  BrushCursor
+  BrushCursor,
+  PointPos,
+  MarkLayer
 }
 Object.keys(components).forEach(name => {
   Vue.component(components[name].name || name, components[name])

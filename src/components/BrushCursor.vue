@@ -6,14 +6,13 @@
 
 <script>
 // 【笔刷光标】
-import { mapState, mapGetters } from 'vuex'
+import { mapState } from 'vuex'
 
 export default {
   inject: ['page'],
 
   computed: {
     ...mapState('edit', ['gridSize', 'pointMode', 'brushMode', 'brushSize', 'brushPos']),
-    ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight']),
 
     // 是否显示
     visible() {
@@ -24,8 +23,8 @@ export default {
     cursorStyle() {
       if (!this.brushPos) return
       return {
-        left: this.brushPos.x * this.gridSize - this.halfGridWidth + 'px',
-        top: this.brushPos.y * this.gridSize - this.halfGridHeight + 'px',
+        left: this.brushPos.x * this.gridSize + 'px',
+        top: this.brushPos.y * this.gridSize + 'px',
         opacity: 0.8
       }
     },

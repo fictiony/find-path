@@ -47,8 +47,8 @@ export default {
   computed: {
     ...mapStateRW('main', ['viewZoom']),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom']),
-    ...mapState('edit', ['xGrids', 'yGrids', 'pointMode', 'brushMode', 'lockBrushDir']),
-    ...mapStateRW('edit', ['brushPos']),
+    ...mapState('edit', ['xGrids', 'yGrids', 'brushMode', 'lockBrushDir']),
+    ...mapStateRW('edit', ['pointMode', 'startPos', 'endPos', 'brushPos']),
     ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight', 'getGridXY']),
 
     // 是否正在拖拽视图
@@ -100,8 +100,11 @@ export default {
       })
 
       // 若已选起止点模式，则优先设置起止点
-      if (this.pointMode) {
-        // TODO
+      if (this.pointMode === 1) {
+        this.startPos = { ...this.brushPos }
+        this.pointMode = 2 // 自动切换到终点
+      } else if (this.pointMode === 2) {
+        this.endPos = { ...this.brushPos }
       } else {
         // 进行绘制
         this.brushDown = true

@@ -2,13 +2,16 @@
   <div>
     <canvas ref="bg" class="absolute-center" :style="canvasStyle" :width="xGrids" :height="yGrids" />
     <canvas ref="state" class="absolute-center" :style="canvasStyle" :width="xGrids" :height="yGrids" />
-    <BrushCursor ref="cursor" />
+    <div class="absolute" :style="layerStyle">
+      <MarkLayer ref="mark" />
+      <BrushCursor ref="cursor" />
+    </div>
   </div>
 </template>
 
 <script>
 // 【网格视图】
-import { mapState } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 import { mapStateRW } from 'boot/utils'
 import { debounce } from 'quasar'
 // eslint-disable-next-line no-unused-vars
@@ -22,6 +25,7 @@ export default {
   computed: {
     ...mapState('edit', ['xGrids', 'yGrids', 'gridSize', 'gridStates', 'brushSize', 'brushPos']),
     ...mapStateRW('edit', ['dirtyArea']),
+    ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight']),
 
     // 画布样式
     canvasStyle() {
@@ -31,6 +35,14 @@ export default {
         height: this.yGrids * this.gridSize + border * 2 + 'px',
         border: border + 'px solid #6666',
         imageRendering: 'pixelated'
+      }
+    },
+
+    // 图层样式
+    layerStyle() {
+      return {
+        left: -this.halfGridWidth + 'px',
+        top: -this.halfGridHeight + 'px'
       }
     }
   },
