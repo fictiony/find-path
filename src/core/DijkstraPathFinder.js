@@ -13,7 +13,7 @@ function comparePriority (nodeA, nodeB) {
 
 export default class DijkstraPathFinder extends BasePathFinder {
   openNodes = null // 节点开启列表
-  stateVer = 0 // 当前寻路状态版本号（每次寻路递增1，这样可以省略节点开启关闭状态的重置处理）
+  findPathVer = 0 // 当前寻路版本号（每次寻路递增1，这样可以省略每次寻路前节点开启关闭状态的重置处理）
 
   // 构造函数
   // - @options 功能选项增加：
@@ -28,22 +28,21 @@ export default class DijkstraPathFinder extends BasePathFinder {
   // - @keepNodes 是否保留节点缓存（当地图障碍无变化时，可提升性能）
   reset (keepNodes = false) {
     this.openNodes.clear()
-    if (keepNodes) {
-      this.stateVer++
-    } else {
+    if (!keepNodes) {
       super.reset()
-      this.stateVer = 0
+      this.findPathVer = 0
     }
   }
 
   // 寻路（重载）
   findPath (startNode, targetNode) {
     this.reset(true)
-    const ver = this.stateVer
     startNode.reset()
+    const ver = ++this.findPathVer
 
     // 从起始节点开始搜索
-    for (let node = startNode; node; node = this.openNodes.pop()) {
+    const openNodes = this.openNodes
+    for (let node = startNode; node; node = openNodes.pop()) {
       node.closeVer = ver
 
       // 到达目标点则结束寻路
@@ -51,13 +50,33 @@ export default class DijkstraPathFinder extends BasePathFinder {
         return this.backtrace(node).reverse()
       }
 
-      // TODO 将相邻节点加入开启列表
+      // 将相邻节点加入开启列表
       this.getNeighbors(node).forEach(n => {
-        if (n.closeVer === ver) continue
+        if (n.closeVer === ver) return // 忽略已关闭的节点（因为其路径必然更短）
 
+        // 若相邻节点已开启且路径更短，则忽略
+        const isOpen = n.openVer === ver
+        const distance = node.distance + node.neighbors[n.id]
+        if (isOpen && n.distance <= distance) return
+
+        // 更新相邻节点状态
+        n.parentId = node.id
+        n.distance = distance
+        n.priority = this.calcPriority(n)
+        if (isOpen) {
+          openNodes.update(n)
+        } else {
+          openNodes.push(n)
+          n.openVer = ver
+        }
       })
     }
 
     return null
+  }
+
+  // 计算节点优先级（可重载）
+  calcPriority (node) {
+    return node.distance
   }
 }

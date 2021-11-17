@@ -40,31 +40,23 @@ export default class BasePathFinder {
     return this.getNode(...PathNode.xyToId(x, y))
   }
 
-  // TODO 获取相邻节点列表
+  // 获取相邻节点列表
   // - @node 中心节点
-  // - @return 相邻节点列表（自动更新路径长度）
+  // - @return 相邻节点列表
   getNeighbors (node) {
     const neighbors = []
-    const { distance, cost } = node
 
-    // 已存在则直接获取节点，并更新节点路径长度
-    let stepCosts = node.neighbors
-    if (stepCosts) {
-      for (const id in stepCosts) {
-        const neighbor = this.getNode(id)
-        neighbor.distance = distance + stepCosts[id]
-        neighbors.push(neighbor)
+    // 已存在则直接获取节点，否则自动检测
+    if (node.neighbors) {
+      for (const id in node.neighbors) {
+        neighbors.push(this.getNode(id))
       }
-
-      // 否则自动检测
     } else {
-      stepCosts = {}
-
       // 按顺序查找四周
       // 5 1 6
       // 2 + 3
       // 7 4 8
-      const { x, y } = node
+      const { x, y, cost } = node
       let n1, n2, n3, n4
       if ((n1 = this.getNodeAt(x, y - 1))) neighbors.push(n1)
       if ((n2 = this.getNodeAt(x - 1, y))) neighbors.push(n2)
@@ -93,12 +85,11 @@ export default class BasePathFinder {
         if (!n8 && (n8 = this.getNodeAt(x + 1, y + 1))) neighbors.push(n8)
       }
 
-      // 更新相邻节点列表，和各个相邻节点的路径长度
+      // 更新相邻节点列表
+      const stepCosts = {}
       neighbors.forEach(n => {
-        const step = n.x === x || n.y === y ? 1 : Math.SQRT2
-        const stepCost = (cost + n.cost) * (step / 2)
-        stepCosts[n.id] = stepCost
-        n.distance = distance + stepCost
+        const step = n.x === x || n.y === y ? 0.5 : Math.SQRT1_2
+        stepCosts[n.id] = (cost + n.cost) * step
       })
       node.neighbors = stepCosts
     }
@@ -111,7 +102,7 @@ export default class BasePathFinder {
   // - @targetNode 目标节点
   // - @return 若找到路径，则返回路径节点列表（含起始节点），否则返回null
   findPath (startNode, targetNode) {
-    return null
+    throw new Error('请重载findPath方法')
   }
 
   // 回溯节点获取路径
