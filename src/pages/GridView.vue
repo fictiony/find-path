@@ -14,8 +14,7 @@
 import { mapState, mapGetters } from 'vuex'
 import { mapStateRW } from 'boot/utils'
 import { debounce } from 'quasar'
-// eslint-disable-next-line no-unused-vars
-import { stateToColor, setPixel, intersectRect, mergeRect } from 'boot/draw'
+import { stateToColor, setPixel } from 'boot/draw'
 import PathNode from 'src/core/PathNode'
 
 export default {
@@ -45,32 +44,22 @@ export default {
         left: -this.halfGridWidth + 'px',
         top: -this.halfGridHeight + 'px'
       }
+    },
+
+    // 画布图案数据
+    canvasData() {
+      if (!this.gridStates) return
+      return new ImageData(this.xGrids, this.yGrids)
     }
   },
 
   watch: {
-    // 网格数量和状态表改变后刷新全部网格
+    // 网格数量改变后刷新全部网格
     xGrids: 'refreshGrids',
     yGrids: 'refreshGrids',
-    gridStates: 'refreshGrids',
 
     // 脏区域更改后自动刷新
-    dirtyArea: 'refreshDirtyArea',
-
-    // 笔刷位置改变后刷新笔刷区域网格（前后两个区域都要刷）
-    brushPos(val, oldVal) {
-      // const size = this.brushSize
-      // const offset = Math.floor(size / 2)
-      // if (val && oldVal) {
-      //   const { x, y } = val
-      //   const { x: oldX, y: oldY } = oldVal
-      //   const rects = mergeRect(x - offset, y - offset, size, size, oldX - offset, oldY - offset, size, size)
-      //   rects.forEach(rect => this.refreshArea(...rect))
-      // } else {
-      //   const { x, y } = val || oldVal
-      //   this.refreshArea(x - offset, y - offset, size, size)
-      // }
-    }
+    dirtyArea: 'refreshDirtyArea'
   },
 
   methods: {
@@ -97,41 +86,46 @@ export default {
       ctx.fillRect(0, 0, this.xGrids, this.yGrids)
     },
 
-    // 刷新指定区域网格
-    // - @left, top, width, height 区域范围
-    refreshArea(left, top, width, height) {
-      const { xGrids, yGrids, gridStates } = this
-      const [x, y, w, h] = intersectRect(left, top, width, height, 0, 0, xGrids, yGrids)
-      if (!w || !h) return
-      // console.log('刷新区域', x, y, w, h)
-
-      // 绘制格子
-      const imageData = new ImageData(w, h)
-      const data = imageData.data
-      for (let j = 0, index = 0; j < h; j++) {
-        for (let i = 0; i < w; i++) {
-          const state = gridStates.get(PathNode.xyToId(x + i, y + j))
-          state && setPixel(data, index, ...stateToColor(state))
-          index += 4
-        }
-      }
-      const ctx = this.$refs.state.getContext('2d')
-      ctx.putImageData(imageData, x, y)
-    },
-
     // 刷新全部网格
     refreshGrids: debounce(function () {
       const tm = Date.now()
       this.refreshBg()
-      this.refreshArea(0, 0, this.xGrids, this.yGrids)
+      this.refreshDirtyArea()
       console.log('用时', Date.now() - tm)
     }, 100),
 
     // 刷新脏区域网格
     refreshDirtyArea() {
-      if (this.dirtyArea) {
-        this.refreshArea(...this.dirtyArea)
-        this.dirtyArea = null
+      const { dirtyArea, gridStates } = this
+      if (!dirtyArea) return
+      const all = dirtyArea === 'all'
+      const area = all ? gridStates : dirtyArea
+      this.dirtyArea = null
+
+      // 遍历脏区域更新像素颜色
+      const { data, width, height } = this.canvasData
+      let [minX, maxX, minY, maxY] = [width, 0, height, 0]
+      for (const id of area.keys()) {
+        const [x, y] = PathNode.idToXY(id)
+        const state = gridStates.get(id) || 0
+        // TODO 叠加寻路状态
+        setPixel(data, (x + y * width) * 4, ...stateToColor(state))
+
+        // 更新脏区域范围（全脏时无需处理）
+        if (all) continue
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+        if (y < minY) minY = y
+        if (y > maxY) maxY = y
+      }
+
+      // 将脏区域内容放到画布上
+      if (!all && (minX > maxX || minY > maxY)) return
+      const ctx = this.$refs.state.getContext('2d')
+      if (all) {
+        ctx.putImageData(this.canvasData, 0, 0)
+      } else {
+        ctx.putImageData(this.canvasData, 0, 0, minX, minY, maxX - minX, maxY - minY)
       }
     }
   },

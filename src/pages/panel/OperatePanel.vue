@@ -113,7 +113,7 @@ export default {
     ...mapActions('edit', ['clearGrids', 'clearPoints', 'findPath']),
 
     // 输入处理
-    onInput({ field, value }) {
+    onInput({ field }) {
       switch (field) {
         case 'xGrids':
         case 'yGrids':

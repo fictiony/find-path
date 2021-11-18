@@ -28,7 +28,6 @@ export default {
       this.brushStates.forEach((state, index) => {
         state && setPixel(data, index * 4, ...stateToColor(state))
       })
-
       this.$el.width = size
       this.$el.height = size
       const ctx = this.$el.getContext('2d')

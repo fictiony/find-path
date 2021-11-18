@@ -9,7 +9,6 @@ import {
   showMsg,
   setClipboardText
 } from 'boot/utils'
-import { mergeRect } from 'boot/draw'
 import PathNode from 'src/core/PathNode'
 import AStarPathFinder from 'src/core/AStarPathFinder'
 import DijkstraPathFinder from 'src/core/DijkstraPathFinder'
@@ -27,7 +26,7 @@ const state = () => ({
   yGrids: 100, // 纵向格数
   gridSize: 20, // 格子边长
   gridStates: new Map(), // 格子状态表：{ 格子ID: 状态值 }，状态值可为：1~100-不同程度的阻碍/101~200-绝对阻挡不可通过/其他-无阻挡
-  dirtyArea: null, // 脏区域范围：[left, top, width, height]
+  dirtyArea: null, // 脏区域范围（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
 
   algorithm: 'astar_o_heap', // 当前算法类型：
   // astar_h - A*寻路（曼哈顿距离）
@@ -293,7 +292,7 @@ const actions = {
       commit('xGrids', w)
       commit('yGrids', h)
       commit('gridStates', states)
-      commit('dirtyArea', null)
+      commit('dirtyArea', 'all')
       notify('加载完成')
     } else {
       showMsg('加载失败！')
@@ -318,7 +317,7 @@ const actions = {
   // 清空格子状态
   async clearGrids ({ commit }) {
     commit('gridStates', new Map())
-    commit('dirtyArea', null)
+    commit('dirtyArea', 'all')
   },
 
   // 笔刷涂点
@@ -326,8 +325,6 @@ const actions = {
   async brushDraw ({ state, getters, commit }, pos) {
     const { xGrids, yGrids, gridStates, brushMode, brushSize } = state
     if (!brushMode) return
-    const offset = Math.floor(brushSize / 2)
-    let dirtyArea
 
     // 计算要绘制的位置（单点时取指定位置或当前笔刷位置，散布时取能覆盖1%区域的随机点）
     const posList = []
@@ -344,6 +341,8 @@ const actions = {
     }
 
     // 进行绘制
+    const offset = Math.floor(brushSize / 2)
+    const dirtyArea = state.dirtyArea || new Map()
     posList.forEach(({ x, y }) => {
       getters.brushStates.forEach((state, index) => {
         if (!state) return
@@ -353,38 +352,30 @@ const actions = {
         if (by < 0 || by >= yGrids) return
 
         // 更新格子状态
-        index = PathNode.xyToId(bx, by)
-        const oldState = gridStates.get(index) || 0
+        const id = PathNode.xyToId(bx, by)
+        const oldState = gridStates.get(id) || 0
+        let newState = 0
         switch (brushMode) {
           case 1: // 叠加
-            gridStates.set(index, Math.min(200, oldState + state))
+            newState = Math.min(200, oldState + state)
             break
           case 2: // 扣除
-            gridStates.set(index, Math.max(0, oldState - state))
+            newState = Math.max(0, oldState - state)
             break
           case 3: // 合并
-            gridStates.set(index, Math.max(oldState, state))
-            break
-          case 4: // 清除
-            gridStates.set(index, 0)
+            newState = Math.max(oldState, state)
             break
         }
-
-        // 合并脏区域
-        const rect = [x - offset, y - offset, brushSize, brushSize]
-        if (dirtyArea) {
-          dirtyArea = mergeRect(...rect, ...dirtyArea)
-        } else {
-          dirtyArea = rect
-        }
+        if (newState === oldState) return
+        gridStates.set(id, newState)
+        dirtyArea.set(id, true)
       })
     })
 
     // 更新脏区域
-    if (state.dirtyArea) {
-      dirtyArea = mergeRect(...state.dirtyArea, ...dirtyArea)
+    if (dirtyArea.size > 0) {
+      commit('dirtyArea', dirtyArea)
     }
-    commit('dirtyArea', dirtyArea)
 
     // 若笔刷样式为随机杂点，则每画一笔刷新一次
     if (state.brushType === 3) {
