@@ -443,25 +443,29 @@ const actions = {
       pf.closeNotify = null
     }
 
-    // 显示结果
+    // TODO 显示寻路状态
+
+    // 显示结果（自动寻路时不显示）
     // console.log(path && path.map(i => `${i.x},${i.y}`).join(' > '))
-    const len = path && path.length - 1
-    notify(
-      `用时${B((Date.now() - tm) / 1000)}秒，${
-        path
-          ? `成功找到路径，共${B(len)}步，距离${B(
-              path[len].distance.toFixed(3)
-            )}`
-          : '未找到路径'
-      }${
-        times > 1
-          ? ''
-          : `，节点生成${B(genCount)}次，开启${B(openCount)}次` +
-            `，更新${B(updateCount)}次，关闭${B(closeCount)}次`
-      }`,
-      'info',
-      { timeout: 5000, closeBtn: true }
-    )
+    if (times > 1 || !state.autoFind) {
+      const len = path && path.length - 1
+      notify(
+        `用时${B((Date.now() - tm) / 1000)}秒，${
+          path
+            ? `成功找到路径，共${B(len)}步，距离${B(
+                path[len].distance.toFixed(3)
+              )}`
+            : '未找到路径'
+        }${
+          times > 1
+            ? ''
+            : `，节点生成${B(genCount)}次，开启${B(openCount)}次` +
+              `，更新${B(updateCount)}次，关闭${B(closeCount)}次`
+        }`,
+        'info',
+        { timeout: 5000, closeBtn: true }
+      )
+    }
   }
 }
 
