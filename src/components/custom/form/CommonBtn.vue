@@ -1,14 +1,5 @@
 <template>
-  <q-btn
-    ref="btn"
-    :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2 text-primary'"
-    style="height: 34px"
-    :label="computedLabel"
-    :icon="computedIcon"
-    v-bind="$attrs"
-    v-on="$listeners"
-    @click="onClick"
-  >
+  <q-btn ref="btn" :label="computedLabel" :icon="computedIcon" v-bind="$attrs" v-on="$listeners" @click="onClick">
     <q-tooltip max-width="400px" anchor="top middle" self="bottom middle" v-if="tips">
       <q-markdown :src="tips" v-if="mdTips" />
       <template v-else>{{ tips }}</template>

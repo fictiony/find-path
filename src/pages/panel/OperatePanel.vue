@@ -31,7 +31,7 @@ const SELECT_PARAMS = {
   mapOptions: true
 }
 const TOGGLE_PARAMS = { t: 'ctrl', component: QToggle, ctrlStyle: { marginTop: '6px', marginBottom: '6px' } }
-const BTN_PARAMS = { t: 'btn', class: 'q-px-xs', push: true }
+const BTN_PARAMS = { t: 'btn', class: 'q-my-xs q-px-xs', glossy: true }
 
 export default {
   data: vm => ({
@@ -40,7 +40,8 @@ export default {
       {
         xGrids: { ...NUM_PARAMS, label: '横向格数', defVal: 100, minVal: 10, maxVal: 10000 },
         yGrids: { ...NUM_PARAMS, label: '纵向格数', defVal: 100, minVal: 10, maxVal: 10000 },
-        gridSize: { ...NUM_PARAMS, label: '格子边长', defVal: 20, minVal: 1, maxVal: 100, suffix: 'px' }
+        gridSize: { ...NUM_PARAMS, label: '格子边长', defVal: 20, minVal: 1, maxVal: 100, suffix: 'px' },
+        clearGrids: { ...BTN_PARAMS, label: '清空' }
       },
       {
         algorithm: { ...SELECT_PARAMS, label: '算法类型', options: ALGORITHMS },
@@ -55,17 +56,16 @@ export default {
           ...BTN_TOGGLE_PARAMS,
           label: '选起止点',
           tips: POINT_MODES.map(i => `${i.value}-${i.name}`).join(' / '),
-          class: 'q-mr-xs',
           options: POINT_MODES,
           clearable: true
         },
         clearPoints: { ...BTN_PARAMS, label: '清除' },
+        autoFind: { ...TOGGLE_PARAMS, label: '自动寻路' },
         findPath: {
           ...BTN_PARAMS,
           label: '寻路', // 暂停、继续
           dynamicParams: () => (!vm.startPos || !vm.endPos ? { disable: true, style: 'opacity: 0.3 !important' } : {})
-        },
-        $class: 'q-gutter-x-xs'
+        }
       },
       {
         brushMode: {
@@ -105,7 +105,7 @@ export default {
 
   computed: {
     ...mapState('edit', ['startPos', 'endPos']),
-    ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'algorithm', 'diagonalMove', 'showState', 'showDelay', 'pointMode']),
+    ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'algorithm', 'diagonalMove', 'showState', 'showDelay', 'pointMode', 'autoFind']),
     ...mapStateRW('edit', ['brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState'])
   },
 
@@ -117,6 +117,7 @@ export default {
       switch (field) {
         case 'xGrids':
         case 'yGrids':
+        case 'clearGrids':
           this.clearGrids()
           break
         case 'clearPoints':

@@ -5,6 +5,7 @@
 <script>
 // 【编辑状态信息】
 import { mapState } from 'vuex'
+import PathNode from 'src/core/PathNode'
 
 export default {
   computed: {
@@ -18,7 +19,7 @@ export default {
       if (this.brushPos) {
         const { x, y } = this.brushPos
         parts.push(`🖱️ ${x}, ${y}`)
-        parts.push(`0️⃣ ${this.gridStates[x + y * this.xGrids] || 0}`)
+        parts.push(`0️⃣ ${this.gridStates.get(PathNode.xyToId(x, y)) || 0}`)
       }
       return parts.join(' - ')
     }

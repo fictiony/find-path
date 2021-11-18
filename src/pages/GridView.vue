@@ -16,6 +16,7 @@ import { mapStateRW } from 'boot/utils'
 import { debounce } from 'quasar'
 // eslint-disable-next-line no-unused-vars
 import { stateToColor, setPixel, intersectRect, mergeRect } from 'boot/draw'
+import PathNode from 'src/core/PathNode'
 
 export default {
   data: () => ({
@@ -109,8 +110,7 @@ export default {
       const data = imageData.data
       for (let j = 0, index = 0; j < h; j++) {
         for (let i = 0; i < w; i++) {
-          const pos = i + x + (j + y) * xGrids
-          const state = gridStates[pos]
+          const state = gridStates.get(PathNode.xyToId(x + i, y + j))
           state && setPixel(data, index, ...stateToColor(state))
           index += 4
         }

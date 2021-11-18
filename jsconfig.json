@@ -23,9 +23,6 @@
       "boot/*": [
         "src/boot/*"
       ],
-      "core/*": [
-        "src/core/*"
-      ],
       "vue$": [
         "node_modules/vue/dist/vue.esm.js"
       ]

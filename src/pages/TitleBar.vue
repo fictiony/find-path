@@ -49,7 +49,7 @@ export default {
     mainMenu: {
       findPathMenu: { label: '寻路', open: false },
       obstacleMenu: { label: '障碍', open: false },
-      editMenu: { label: '编辑', open: false },
+      editMenu: { label: '功能', open: false },
       viewMenu: { label: '视图', open: false },
       helpMenu: { label: '帮助', open: false }
     },
@@ -68,36 +68,7 @@ export default {
           icon: () => (vm.diagonalMove === i.value ? 'done' : ''),
           handler: () => (vm.diagonalMove = i.value)
         }
-      }),
-      null,
-      ...POINT_MODES.map(i => {
-        return {
-          label: () => `指定${i.name}${vm.pointMode === i.value ? ' (当前)' : ''}`,
-          icon: i.icon,
-          shortcut: i.shortcut,
-          handler: () => (vm.pointMode = vm.pointMode === i.value ? null : i.value)
-        }
-      }),
-      {
-        label: '清除起点终点',
-        icon: 'clear',
-        shortcut: 'Esc',
-        handler: vm.clearPoints
-      },
-      null,
-      {
-        label: '进行寻路', // 暂停寻路、继续寻路
-        icon: 'play_arrow',
-        shortcut: 'F9',
-        handler: vm.findPath,
-        disable: () => !vm.startPos || !vm.endPos
-      },
-      {
-        label: '显示寻路状态',
-        shortcut: 'F6',
-        icon: () => (vm.showState ? 'done' : ''),
-        handler: () => (vm.showState = !vm.showState)
-      }
+      })
     ],
     obstacleMenu: [
       ...BRUSH_MODES.map(i => {
@@ -194,9 +165,51 @@ export default {
       },
       null,
       {
-        label: '锁定水平垂直绘制',
+        label: '锁定正交绘制(按住Shift)',
         icon: () => (vm.lockBrushDir ? 'done' : ''),
         handler: () => (vm.lockBrushDir = !vm.lockBrushDir)
+      },
+      {
+        label: '显示寻路状态',
+        shortcut: 'F6',
+        icon: () => (vm.showState ? 'done' : ''),
+        handler: () => (vm.showState = !vm.showState)
+      },
+      {
+        label: '自动寻路',
+        shortcut: 'F7',
+        icon: () => (vm.autoFind ? 'done' : ''),
+        handler: () => (vm.autoFind = !vm.autoFind)
+      },
+      null,
+      ...POINT_MODES.map(i => {
+        return {
+          label: () => `指定${i.name}${vm.pointMode === i.value ? ' (当前)' : ''}`,
+          icon: i.icon,
+          shortcut: i.shortcut,
+          handler: () => (vm.pointMode = vm.pointMode === i.value ? null : i.value)
+        }
+      }),
+      {
+        label: '清除起点终点',
+        icon: 'clear',
+        shortcut: 'Esc',
+        handler: vm.clearPoints
+      },
+      null,
+      {
+        label: '进行寻路', // 暂停寻路、继续寻路
+        icon: 'play_arrow',
+        shortcut: 'F9',
+        handler: vm.findPath,
+        disable: () => !vm.startPos || !vm.endPos
+      },
+      {
+        label: '重复寻路1000次',
+        icon: '1k',
+        shortcut: 'Ctrl+F9',
+        handler: () => vm.findPath(1000),
+        disable: () => !vm.startPos || !vm.endPos
       }
     ],
     viewMenu: [
@@ -287,8 +300,8 @@ export default {
             {
               label: '查看格子状态表',
               handler: () => {
-                console.log('【笔刷】\n', vm.$clone(vm.$store.getters['edit/brushStates']))
-                console.log('【全图】\n', vm.$clone(vm.$store.state.edit.gridStates))
+                console.log('【笔刷】\n', vm.$store.getters['edit/brushStates'].slice())
+                console.log('【全图】\n', vm.$store.state.edit.gridStates.entries())
               }
             }
           ]
@@ -306,7 +319,7 @@ export default {
     ...mapStateRW('main', ['darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom']),
     ...mapState('edit', ['startPos', 'endPos']),
-    ...mapStateRW('edit', ['algorithm', 'diagonalMove', 'showState', 'pointMode']),
+    ...mapStateRW('edit', ['algorithm', 'diagonalMove', 'showState', 'pointMode', 'autoFind']),
     ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir'])
   },
 

@@ -14,8 +14,9 @@ function comparePriority (nodeA, nodeB) {
 export default class DijkstraPathFinder extends BasePathFinder {
   openNodes = null // 开启节点有序列表
   findPathVer = 0 // 当前寻路版本号（每次寻路递增1，这样可以省略每次寻路前节点开启关闭状态的重置处理）
-  openNotify = null // 节点开启通知函数，参数为：(节点, true)
-  closeNotify = null // 节点关闭通知函数，参数为：(节点, false)
+  openNotify = null // 节点开启通知函数，参数为：(节点, 1)
+  updateNotify = null // 节点更新通知函数，参数为：(节点, 2)
+  closeNotify = null // 节点关闭通知函数，参数为：(节点, 0)
 
   // 构造函数
   // - @options 功能选项增加：
@@ -26,8 +27,9 @@ export default class DijkstraPathFinder extends BasePathFinder {
     super(genNode, options)
     const heapSort = 'heapSort' in options ? options.heapSort : true
     this.openNodes = new SortedNodes(comparePriority, heapSort)
-    this.openNotify = options.openNotify
-    this.closeNotify = options.closeNotify
+    this.openNotify = options.openNotify || null
+    this.updateNotify = options.updateNotify || null
+    this.closeNotify = options.closeNotify || null
   }
 
   // 重置状态缓存（重载）
@@ -41,16 +43,16 @@ export default class DijkstraPathFinder extends BasePathFinder {
   }
 
   // 寻路（重载）
-  findPath (startNode, targetNode) {
+  async findPath (startNode, targetNode) {
     this.reset(true)
     startNode.reset()
     const ver = ++this.findPathVer
 
     // 从起始节点开始搜索
-    const { openNodes, openNotify, closeNotify } = this
+    const { openNodes, openNotify, updateNotify, closeNotify } = this
     for (let node = startNode; node; node = openNodes.pop()) {
       node.closeVer = ver
-      closeNotify && closeNotify(node, false)
+      closeNotify && (await closeNotify(node, 0))
 
       // 到达目标点则结束寻路
       if (node === targetNode) {
@@ -58,13 +60,13 @@ export default class DijkstraPathFinder extends BasePathFinder {
       }
 
       // 将相邻节点加入开启列表
-      this.getNeighbors(node).forEach(n => {
-        if (n.closeVer === ver) return // 忽略已关闭的节点（因为其路径必然更短）
+      for (const n of this.getNeighbors(node)) {
+        if (n.closeVer === ver) continue // 忽略已关闭的节点（因为其路径必然更短）
 
         // 若相邻节点已开启且路径更短，则忽略
         const isOpen = n.openVer === ver
-        const distance = node.distance + node.neighbors[n.id]
-        if (isOpen && n.distance <= distance) return
+        const distance = node.distance + node.neighbors.get(n.id)
+        if (isOpen && n.distance <= distance) continue
 
         // 更新相邻节点状态
         n.parentId = node.id
@@ -72,12 +74,13 @@ export default class DijkstraPathFinder extends BasePathFinder {
         n.priority = this.calcPriority(n)
         if (isOpen) {
           openNodes.update(n)
+          updateNotify && (await updateNotify(n, 2))
         } else {
           openNodes.push(n)
           n.openVer = ver
-          openNotify && openNotify(n, true)
+          openNotify && (await openNotify(n, 1))
         }
-      })
+      }
     }
 
     return null

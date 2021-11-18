@@ -36,7 +36,7 @@ export default class SortedNodes {
   pop () {
     if (this.isEmpty) return
     if (this.heapSort) {
-      Heap.pop(this.nodes, this.compare)
+      return Heap.pop(this.nodes, this.compare)
     } else {
       this.sort()
       return this.nodes.pop()

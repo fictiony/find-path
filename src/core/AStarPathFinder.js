@@ -17,10 +17,13 @@ export default class AStarPathFinder extends DijkstraPathFinder {
 
   // 构造函数
   // - @options 功能选项增加：
-  //    heuristic: 启发函数，默认为曼哈顿距离
+  //    heuristic: 启发函数（亦可为内置启发函数名），默认为曼哈顿距离
   constructor (genNode, options = {}) {
     super(genNode, options)
-    this.heuristic = options.heuristic || AStarPathFinder.manhattan
+    this.heuristic =
+      typeof options.heuristic === 'function'
+        ? options.heuristic
+        : AStarPathFinder[options.heuristic] || AStarPathFinder.manhattan
   }
 
   // 曼哈顿距离
@@ -44,9 +47,9 @@ export default class AStarPathFinder extends DijkstraPathFinder {
   }
 
   // 寻路（重载）
-  findPath (startNode, targetNode) {
+  async findPath (startNode, targetNode) {
     this.targetNode = targetNode
-    return super.findPath(startNode, targetNode)
+    return await super.findPath(startNode, targetNode)
   }
 
   // 计算节点优先级（重载）

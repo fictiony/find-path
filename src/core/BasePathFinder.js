@@ -4,7 +4,7 @@ import PathNode from './PathNode'
 export default class BasePathFinder {
   genNode = null // 节点生成函数（当节点不在表中时调用），格式为：节点ID => PathNode对象或null（表示不可走）
   diagonalMove = 0 // 是否可走对角线
-  nodes = {} // 节点表：{ 节点ID: 节点对象或null }
+  nodes = new Map() // 节点表：{ 节点ID: 节点对象或null }
 
   // 构造函数
   // - @options 功能选项，可包含：
@@ -22,22 +22,22 @@ export default class BasePathFinder {
 
   // 重置状态缓存
   reset () {
-    this.nodes = {}
+    this.nodes.clear()
   }
 
   // 获取指定ID的节点
   getNode (id) {
-    if (id in this.nodes) {
-      return this.nodes[id]
+    let node = this.nodes.get(id)
+    if (node === undefined) {
+      node = this.genNode(id) || null
+      this.nodes.set(id, node)
     }
-    const node = this.genNode(id)
-    this.nodes[id] = node
     return node
   }
 
   // 获取指定坐标的节点
   getNodeAt (x, y) {
-    return this.getNode(...PathNode.xyToId(x, y))
+    return this.getNode(PathNode.xyToId(x, y))
   }
 
   // 获取相邻节点列表
@@ -48,7 +48,7 @@ export default class BasePathFinder {
 
     // 已存在则直接获取节点，否则自动检测
     if (node.neighbors) {
-      for (const id in node.neighbors) {
+      for (const id of node.neighbors.keys()) {
         neighbors.push(this.getNode(id))
       }
     } else {
@@ -86,11 +86,11 @@ export default class BasePathFinder {
       }
 
       // 更新相邻节点列表
-      const stepCosts = {}
-      neighbors.forEach(n => {
+      const stepCosts = new Map()
+      for (const n of neighbors) {
         const step = n.x === x || n.y === y ? 0.5 : Math.SQRT1_2
-        stepCosts[n.id] = (cost + n.cost) * step
-      })
+        stepCosts.set(n.id, (cost + n.cost) * step)
+      }
       node.neighbors = stepCosts
     }
 
@@ -101,7 +101,7 @@ export default class BasePathFinder {
   // - @startNode 起始节点
   // - @targetNode 目标节点
   // - @return 若找到路径，则返回路径节点列表（含起始节点），否则返回null
-  findPath (startNode, targetNode) {
+  async findPath (startNode, targetNode) {
     throw new Error('请重载findPath方法')
   }
 
@@ -111,8 +111,9 @@ export default class BasePathFinder {
   backtrace (node) {
     const path = [node]
     while (node.parentId != null) {
-      node = this.nodes[node.parentId]
+      node = this.nodes.get(node.parentId)
       if (!node) break
+      path.push(node)
     }
     return path
   }

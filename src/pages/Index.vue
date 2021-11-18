@@ -47,7 +47,7 @@ export default {
   computed: {
     ...mapStateRW('main', ['viewZoom']),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom']),
-    ...mapState('edit', ['xGrids', 'yGrids', 'brushMode', 'lockBrushDir']),
+    ...mapState('edit', ['xGrids', 'yGrids', 'autoFind', 'brushMode', 'lockBrushDir']),
     ...mapStateRW('edit', ['pointMode', 'startPos', 'endPos', 'brushPos']),
     ...mapGetters('edit', ['halfGridWidth', 'halfGridHeight', 'getGridXY']),
 
@@ -72,11 +72,26 @@ export default {
     // 切换绘制光标
     showDrawCursor(val) {
       this.$setCursor(val ? 'crosshair' : '')
+    },
+
+    // 起始点改变后自动切换到终点，起止点都指定后自动寻路
+    startPos(val) {
+      if (val) {
+        this.pointMode = 2
+        if (this.endPos && this.autoFind) {
+          this.findPath()
+        }
+      }
+    },
+    endPos(val) {
+      if (val && this.startPos && this.autoFind) {
+        this.findPath()
+      }
     }
   },
 
   methods: {
-    ...mapActions('edit', ['brushDraw']),
+    ...mapActions('edit', ['brushDraw', 'findPath']),
 
     // 页面坐标转格点坐标
     // - @return { x: X格点, y: Y格点 }（若格点越界则返回null）
@@ -102,7 +117,6 @@ export default {
       // 若已选起止点模式，则优先设置起止点
       if (this.pointMode === 1) {
         this.startPos = { ...this.brushPos }
-        this.pointMode = 2 // 自动切换到终点
       } else if (this.pointMode === 2) {
         this.endPos = { ...this.brushPos }
       } else {
