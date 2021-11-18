@@ -1,7 +1,7 @@
 <template>
   <div class="absolute">
-    <PointPos v-bind="startPos" :radius="gridSize" color="#2bf" :thick="gridSize / 5" animate="out" v-if="startPos" />
-    <PointPos v-bind="endPos" :radius="gridSize" color="#f22" :thick="gridSize / 5" animate="in" v-if="endPos" />
+    <PointPos v-bind="startPos" :radius="gridSize" color="#09f" :thick="gridSize / 5" stacks="3" animate="out" duration="2" v-if="startPos" />
+    <PointPos v-bind="endPos" :radius="gridSize" color="#f22" :thick="gridSize / 5" stacks="3" animate="in" duration="2" v-if="endPos" />
   </div>
 </template>
 
