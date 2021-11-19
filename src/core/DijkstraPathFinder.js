@@ -6,11 +6,6 @@
 import BasePathFinder from './BasePathFinder'
 import SortedNodes from './SortedNodes'
 
-// 比较节点优先级
-function comparePriority (nodeA, nodeB) {
-  return nodeA.priority - nodeB.priority
-}
-
 export default class DijkstraPathFinder extends BasePathFinder {
   openNodes = null // 开启节点有序列表
   openNotify = null // 节点开启通知函数，格式为：(节点, 类型=1) => 是否取消寻路
@@ -25,7 +20,7 @@ export default class DijkstraPathFinder extends BasePathFinder {
   constructor (genNode, options = {}) {
     super(genNode, options)
     const heapSort = 'heapSort' in options ? options.heapSort : true
-    this.openNodes = new SortedNodes(comparePriority, heapSort)
+    this.openNodes = new SortedNodes(this.comparePriority, heapSort)
     this.openNotify = options.openNotify || null
     this.updateNotify = options.updateNotify || null
     this.closeNotify = options.closeNotify || null
@@ -87,5 +82,10 @@ export default class DijkstraPathFinder extends BasePathFinder {
   // 计算节点优先级（可重载）
   calcPriority (node) {
     return node.distance
+  }
+
+  // 节点优先级比较（可重载）
+  comparePriority (nodeA, nodeB) {
+    return nodeA.priority - nodeB.priority
   }
 }

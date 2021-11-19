@@ -8,7 +8,6 @@ export default class PathNode {
   neighbors = null // 相邻节点距离表（需用Map）：{ 节点ID: 距离消耗（= 间距 * 消耗系数和 / 2）}，null表示自动计算
   parentId = null // 父节点ID
   distance = 0 // 路径长度（路径中所有相邻节点的距离消耗总和）
-  heurist = 0 // 启发函数值
   priority = 0 // 优先级
   openVer = 0 // 开启状态版本号（与寻路版本号相同时表示节点已开启）
   closeVer = 0 // 关闭状态版本号（与寻路版本号相同时表示节点已关闭）
@@ -25,7 +24,6 @@ export default class PathNode {
   reset () {
     this.parentId = null
     this.distance = 0
-    this.heurist = 0
     this.priority = 0
   }
 

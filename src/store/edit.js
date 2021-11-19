@@ -76,10 +76,10 @@ async function findPathNotify ({ id }, type) {
 // - @delay 要延迟的时间（毫秒）
 // - @return 是否取消本次寻路
 async function findPathDelay (delay = 10) {
+  const id = fpCtx.state.findPathId
   const pf = fpCtx.getters.pathFinder
-  const ver = pf.findPathVer
   await sleep(delay)
-  if (pf !== fpCtx.getters.pathFinder || ver !== pf.findPathVer) {
+  if (id !== fpCtx.state.findPathId || pf !== fpCtx.getters.pathFinder) {
     return true // 若延时过程中寻路环境改变，则取消本次寻路
   }
   return false
@@ -92,6 +92,7 @@ const state = () => ({
   gridSize: 20, // 格子边长
   gridStates: new Map(), // 格子状态表：{ 格子ID: 状态值 }，状态值可为：1~100-不同程度的阻碍/101~200-绝对阻挡不可通过/其他-无阻挡
   gridDirty: null, // 格子脏区域（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
+  findPathId: 0, // 当前寻路标识（每次递增1）
   findingPath: false, // 当前是否正在寻路中
   pathStates: new Map(), // 路径状态表：{ 格子ID: 状态值 }，状态值可为：1~100-不同刷新次数的开启节点/101~200-不同刷新次数的关闭节点/201路径节点/其他-无
   pathDirty: null, // 路径脏区域（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
@@ -248,6 +249,7 @@ const mutations = {
     'gridSize',
     'gridStates',
     'gridDirty',
+    'findPathId',
     'findingPath',
     'pathStates',
     'pathDirty',
@@ -400,16 +402,22 @@ const actions = {
   },
 
   // 清空路径状态
-  async clearPath ({ dispatch }, forceReset) {
+  async clearPath ({ state, commit, dispatch }, forceReset) {
     await dispatch('clearStates', ['pathStates', 'pathDirty', forceReset])
+    if (state.findingPath) {
+      commit('findingPath', false)
+      commit('findPathId', state.findPathId + 1)
+    }
   },
 
-  // 清除起点终点
+  // 清除起点终点（包括寻路状态，若正在寻路中则仅清除寻路状态）
   // - @mode 指定起止点模式
-  async clearPoints ({ commit, dispatch }, mode = 1) {
-    commit('startPos', null)
-    commit('endPos', null)
-    commit('pointMode', mode)
+  async clearPoints ({ state, commit, dispatch }, mode = 1) {
+    if (!state.findingPath) {
+      commit('startPos', null)
+      commit('endPos', null)
+      commit('pointMode', mode)
+    }
     await dispatch('clearPath')
   },
 
@@ -493,6 +501,8 @@ const actions = {
 
     // 清除当前寻路状态
     await dispatch('clearPath')
+    const id = state.findPathId + 1
+    commit('findPathId', id)
     let tm, path
 
     // 开始寻路
@@ -510,6 +520,7 @@ const actions = {
         const progress = ((i / times) * 100).toFixed(1)
         commit('main/loading', `正在处理... ${progress}%`, ROOT)
         await sleep(20)
+        if (id !== state.findPathId) break // 中途取消
         tm += 20
         last = Date.now()
       }
@@ -531,6 +542,7 @@ const actions = {
       pf.updateNotify = null
       pf.closeNotify = null
     }
+    if (id !== state.findPathId || pf !== getters.pathFinder) return // 中途取消
     commit('findingPath', false)
 
     // 显示路径

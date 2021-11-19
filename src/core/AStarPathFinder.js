@@ -1,6 +1,6 @@
 // 【A*寻路算法】
 // - 最短路径寻路算法的改进版本，开启节点的优先级按可选的启发函数来调整，值越小的越优先
-// - 优先级计算公式为：路径长度 + 启发函数值
+// - 优先级计算公式为：路径长度 + 启发函数值，相等时启发函数值小的更优先（有利于接近目标点的节点扩展）
 // - 常用启发函数值有（dx、dy为当前节点距离终点的横坐标和纵坐标差）：
 //   1. 曼哈顿距离（dx + dy）
 //   2. 欧几里德距离（sqrt(dx² + dy²)）
@@ -38,7 +38,7 @@ export default class AStarPathFinder extends DijkstraPathFinder {
 
   // 45°角距离
   static octile (dx, dy) {
-    return dx < dy ? dx * SQRT2_1 + dy : dx + dy * SQRT2_1
+    return dx < dy ? dx * SQRT2_1 + dy : dy * SQRT2_1 + dx
   }
 
   // 切比雪夫距离
@@ -57,7 +57,7 @@ export default class AStarPathFinder extends DijkstraPathFinder {
     if (node.openVer !== this.findPathVer) {
       node.heurist = this.calcHeurist(node)
     }
-    return node.distance + node.heurist
+    return Math.round((node.distance + node.heurist) * 1e8) * 1e-8 // 修正浮点误差，避免扩展无效节点
   }
 
   // 计算节点启发函数值（可重载）
@@ -66,5 +66,10 @@ export default class AStarPathFinder extends DijkstraPathFinder {
     const dx = Math.abs(node.x - x)
     const dy = Math.abs(node.y - y)
     return this.heuristic(dx, dy)
+  }
+
+  // 节点优先级比较（重载）
+  comparePriority (nodeA, nodeB) {
+    return nodeA.priority - nodeB.priority || nodeA.heurist - nodeB.heurist
   }
 }
