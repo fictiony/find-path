@@ -14,7 +14,7 @@
       :style="combineInputStyle"
       :placeholder="$attrs.placeholder || defVal"
       v-bind="$attrs"
-      v-on="{ ...$listeners, input: () => {} }"
+      v-on="inputListeners"
       :value="editValue"
       @input="onInput"
       @blur="onEnter"
@@ -76,6 +76,11 @@ export default {
         style.maxWidth = this.maxWidth + 'px'
       }
       return style
+    },
+
+    // 输入框组件事件监听列表
+    inputListeners() {
+      return { ...this.$listeners, input: () => {} }
     }
   },
 

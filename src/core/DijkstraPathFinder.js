@@ -13,10 +13,9 @@ function comparePriority (nodeA, nodeB) {
 
 export default class DijkstraPathFinder extends BasePathFinder {
   openNodes = null // 开启节点有序列表
-  findPathVer = 0 // 当前寻路版本号（每次寻路递增1，这样可以省略每次寻路前节点开启关闭状态的重置处理）
-  openNotify = null // 节点开启通知函数，参数为：(节点, 1)
-  updateNotify = null // 节点更新通知函数，参数为：(节点, 2)
-  closeNotify = null // 节点关闭通知函数，参数为：(节点, 0)
+  openNotify = null // 节点开启通知函数，格式为：(节点, 类型=1) => 是否取消寻路
+  updateNotify = null // 节点更新通知函数，格式为：(节点, 类型=2) => 是否取消寻路
+  closeNotify = null // 节点关闭通知函数，格式为：(节点, 类型=0) => 是否取消寻路
 
   // 构造函数
   // - @options 功能选项增加：
@@ -38,7 +37,6 @@ export default class DijkstraPathFinder extends BasePathFinder {
     this.openNodes.clear()
     if (!keepNodes) {
       super.reset()
-      this.findPathVer = 0
     }
   }
 
@@ -52,7 +50,7 @@ export default class DijkstraPathFinder extends BasePathFinder {
     const { openNodes, openNotify, updateNotify, closeNotify } = this
     for (let node = startNode; node; node = openNodes.pop()) {
       node.closeVer = ver
-      closeNotify && (await closeNotify(node, 0))
+      if (closeNotify && (await closeNotify(node, 0))) return null
 
       // 到达目标点则结束寻路
       if (node === targetNode) {
@@ -74,11 +72,11 @@ export default class DijkstraPathFinder extends BasePathFinder {
         n.priority = this.calcPriority(n)
         if (isOpen) {
           openNodes.update(n)
-          updateNotify && (await updateNotify(n, 2))
+          if (updateNotify && (await updateNotify(n, 2))) return null
         } else {
           openNodes.push(n)
           n.openVer = ver
-          openNotify && (await openNotify(n, 1))
+          if (openNotify && (await openNotify(n, 1))) return null
         }
       }
     }

@@ -5,7 +5,7 @@
 <script>
 // 【笔刷图案】
 import { mapState, mapGetters } from 'vuex'
-import { stateToColor, setPixel } from 'boot/draw'
+import { gridToColor, setPixel } from 'boot/draw'
 
 export default {
   computed: {
@@ -26,7 +26,7 @@ export default {
       const imageData = new ImageData(size, size)
       const data = imageData.data
       this.brushStates.forEach((state, index) => {
-        state && setPixel(data, index * 4, ...stateToColor(state))
+        state && setPixel(data, index * 4, ...gridToColor(state))
       })
       this.$el.width = size
       this.$el.height = size

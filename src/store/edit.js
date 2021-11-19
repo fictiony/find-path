@@ -15,10 +15,62 @@ import DijkstraPathFinder from 'src/core/DijkstraPathFinder'
 
 // ----------------------------------------------------------------------------【utils】
 
+// 寻路状态相关
+let fpCtx = null // 当前寻路的vuex环境
 let genCount = 0 // 节点生成计数
 let openCount = 0 // 节点开启计数
 let updateCount = 0 // 节点更新计数
 let closeCount = 0 // 节点关闭计数
+let delaySum = 0 // 累积延时时间（毫秒）
+
+// 寻路状态通知函数
+// - @id 节点ID
+// - @type 通知类型
+async function findPathNotify ({ id }, type) {
+  const { pathStates, pathDirty, showState, showDelay } = fpCtx.state
+  const newDirty =
+    !showState || pathDirty === 'all' ? null : pathDirty || new Map()
+
+  // 更新寻路状态
+  let state = pathStates.get(id) || 0
+  switch (type) {
+    case 0:
+      closeCount++
+      state = (state || 1) + 100
+      break
+    case 1:
+      openCount++
+      state = 1
+      break
+    case 2:
+      updateCount++
+      if (state++ % 100) break
+      return // 最多加到100
+  }
+  pathStates.set(id, state)
+
+  // 更新脏区域
+  if (newDirty) {
+    newDirty.set(id, true)
+    if (newDirty !== pathDirty) {
+      fpCtx.commit('pathDirty', newDirty)
+    }
+  }
+
+  // 延时显示（每累积10毫秒以上延时一下）
+  if (showState && showDelay > 0) {
+    delaySum += showDelay
+    if (delaySum >= 10) {
+      const pf = fpCtx.getters.pathFinder
+      const ver = pf.findPathVer
+      await sleep(Math.floor(delaySum))
+      if (pf !== fpCtx.getters.pathFinder || ver !== pf.findPathVer) {
+        return true // 若延时过程中寻路环境改变，则取消本次寻路
+      }
+      delaySum = delaySum % 1
+    }
+  }
+}
 
 // ----------------------------------------------------------------------------【state】
 const state = () => ({
@@ -26,9 +78,11 @@ const state = () => ({
   yGrids: 100, // 纵向格数
   gridSize: 20, // 格子边长
   gridStates: new Map(), // 格子状态表：{ 格子ID: 状态值 }，状态值可为：1~100-不同程度的阻碍/101~200-绝对阻挡不可通过/其他-无阻挡
-  dirtyArea: null, // 脏区域范围（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
+  gridDirty: null, // 格子脏区域（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
+  pathStates: new Map(), // 路径状态表：{ 格子ID: 状态值 }，状态值可为：1~100-不同刷新次数的开启节点/101~200-不同刷新次数的关闭节点/201路径节点/其他-无
+  pathDirty: null, // 路径脏区域（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
 
-  algorithm: 'astar_o_heap', // 当前算法类型：
+  algorithm: 'astar_h_heap', // 当前算法类型：
   // astar_h - A*寻路（曼哈顿距离）
   // astar_e - A*寻路（欧几里德距离）
   // astar_o - A*寻路（45°角距离）
@@ -45,7 +99,7 @@ const state = () => ({
   pointMode: 0, // 起止点模式：1-指定起点/2-指定终点/null-无，pointMode优先级高于brushMode
   startPos: null, // 当前寻路起点坐标：{x, y}
   endPos: null, // 当前寻路终点坐标：{x, y}
-  autoFind: false, // 是否在选完起止点后立即自动寻路
+  autoFind: true, // 是否在选完起止点后立即自动寻路
 
   brushMode: 1, // 笔刷模式：1-叠加/2-扣除/3-合并/4-清除/null-无
   brushType: 2, // 笔刷样式：1-方形/2-圆形/3-随机杂点/4-方形随机散布/5-圆形随机散布
@@ -129,7 +183,7 @@ const getters = {
 
   // 寻路算法对象
   pathFinder (state) {
-    if (state.dirtyArea) return null
+    if (state.gridDirty) return null
     const { xGrids, yGrids, gridStates, algorithm, diagonalMove } = state
 
     // 节点生成函数
@@ -170,23 +224,6 @@ const getters = {
         return new DijkstraPathFinder(genNode, options)
     }
     return null
-  },
-
-  // TODO 寻路状态通知函数
-  stateNotify (state) {
-    return (node, state) => {
-      switch (state) {
-        case 0:
-          closeCount++
-          break
-        case 1:
-          openCount++
-          break
-        case 2:
-          updateCount++
-          break
-      }
-    }
   }
 }
 
@@ -197,7 +234,9 @@ const mutations = {
     'yGrids',
     'gridSize',
     'gridStates',
-    'dirtyArea',
+    'gridDirty',
+    'pathStates',
+    'pathDirty',
     'algorithm',
     'diagonalMove',
     'showState',
@@ -291,8 +330,8 @@ const actions = {
       const states = await dispatch('dataURLToGridStates', info.states)
       commit('xGrids', w)
       commit('yGrids', h)
+      await dispatch('clearGrids', true)
       commit('gridStates', states)
-      commit('dirtyArea', 'all')
       setTimeout(notify, 100, '加载完成')
     } else {
       showMsg('加载失败！')
@@ -314,17 +353,59 @@ const actions = {
     notify('已复制到剪贴板')
   },
 
+  // 清空状态
+  // - @name 状态属性名
+  // - @dirtyName 脏区域属性名
+  // - @forceReset 是否强制重置（否则会根据状态数量智能选择重置或按项清除）
+  async clearStates ({ state, commit }, [name, dirtyName, forceReset]) {
+    const size = state[name].size
+    if (forceReset || size > (state.xGrids * state.yGrids) / 100) {
+      commit(name, new Map())
+      commit(dirtyName, 'all')
+    } else if (size > 0) {
+      if (state[dirtyName] === 'all') {
+        state[name].clear()
+      } else {
+        const dirtyArea = state[dirtyName] || new Map()
+        for (const id of state[name].keys()) {
+          dirtyArea.set(id, true)
+        }
+        state[name].clear()
+        commit(dirtyName, dirtyArea)
+      }
+    }
+  },
+
   // 清空格子状态
-  async clearGrids ({ commit }) {
-    commit('gridStates', new Map())
-    commit('dirtyArea', 'all')
+  async clearGrids ({ dispatch }, forceReset) {
+    await dispatch('clearStates', ['gridStates', 'gridDirty', forceReset])
+    await dispatch('clearPath', forceReset)
+    await dispatch('clearPoints', null)
+  },
+
+  // 清空路径状态
+  async clearPath ({ dispatch }, forceReset) {
+    await dispatch('clearStates', ['pathStates', 'pathDirty', forceReset])
+  },
+
+  // 清除起点终点
+  // - @mode 指定起止点模式
+  async clearPoints ({ commit, dispatch }, mode = 1) {
+    commit('startPos', null)
+    commit('endPos', null)
+    commit('pointMode', mode)
+    await dispatch('clearPath')
   },
 
   // 笔刷涂点
   // - @pos 指定坐标（未指定则取当前笔刷位置）
-  async brushDraw ({ state, getters, commit }, pos) {
-    const { xGrids, yGrids, gridStates, brushMode, brushSize } = state
+  async brushDraw ({ state, getters, commit, dispatch }, pos) {
+    const { brushMode } = state
     if (!brushMode) return
+
+    // 清除当前寻路状态
+    await dispatch('clearPath')
+    const { xGrids, yGrids, gridStates, gridDirty, brushSize } = state
 
     // 计算要绘制的位置（单点时取指定位置或当前笔刷位置，散布时取能覆盖1%区域的随机点）
     const posList = []
@@ -342,7 +423,7 @@ const actions = {
 
     // 进行绘制
     const offset = Math.floor(brushSize / 2)
-    const dirtyArea = state.dirtyArea || new Map()
+    const newDirty = gridDirty === 'all' ? null : gridDirty || new Map()
     posList.forEach(({ x, y }) => {
       getters.brushStates.forEach((state, index) => {
         if (!state) return
@@ -368,13 +449,11 @@ const actions = {
         }
         if (newState === oldState) return
         gridStates.set(id, newState)
-        dirtyArea.set(id, true)
+        newDirty && newDirty.set(id, true)
       })
     })
-
-    // 更新脏区域
-    if (dirtyArea.size > 0) {
-      commit('dirtyArea', dirtyArea)
+    if (newDirty && newDirty !== gridDirty) {
+      commit('gridDirty', newDirty)
     }
 
     // 若笔刷样式为随机杂点，则每画一笔刷新一次
@@ -383,27 +462,26 @@ const actions = {
     }
   },
 
-  // 清除起点终点
-  async clearPoints ({ commit }) {
-    commit('startPos', null)
-    commit('endPos', null)
-    commit('pointMode', 1)
-  },
-
   // 寻路
-  // - @times 重复次数
-  async findPath ({ state, getters, commit }, times = 1) {
+  // - @times 重复次数（0表示自动寻路）
+  async findPath ({ state, getters, commit, dispatch }, times = 0) {
     const { startPos, endPos } = state
     const pf = getters.pathFinder
-    window.$p = pf
+    if (process.env.DEBUGGING) {
+      window.$p = pf
+    }
     const startNode = pf.getNodeAt(startPos.x, startPos.y)
     if (!startNode) return notify('起点不可用', 'warn')
     const targetNode = pf.getNodeAt(endPos.x, endPos.y)
     if (!targetNode) return notify('终点不可用', 'warn')
+
+    // 清除当前寻路状态
+    await dispatch('clearPath')
     let tm, path
 
-    // 若重复次数>1，则不加节点状态通知
+    // 开始寻路
     if (times > 1) {
+      // 若重复次数>1，则不加节点状态通知，以便保证最高性能
       commit('main/loading', '正在处理... 请稍候', ROOT)
       await sleep(100)
       tm = Date.now()
@@ -419,14 +497,16 @@ const actions = {
       }
       commit('main/loading', false, ROOT)
     } else {
-      // 添加节点状态通知，并统计节点状态计数
-      pf.openNotify = getters.stateNotify
-      pf.updateNotify = getters.stateNotify
-      pf.closeNotify = getters.stateNotify
+      // 添加节点状态通知，以统计节点状态计数和处理寻路状态显示
+      fpCtx = { state, getters, commit }
       genCount = 0
       openCount = 0
       updateCount = 0
       closeCount = 0
+      delaySum = 0
+      pf.openNotify = findPathNotify
+      pf.updateNotify = findPathNotify
+      pf.closeNotify = findPathNotify
       tm = Date.now()
       path = await pf.findPath(startNode, targetNode)
       pf.openNotify = null
@@ -434,11 +514,22 @@ const actions = {
       pf.closeNotify = null
     }
 
-    // TODO 显示寻路状态
+    // 显示路径
+    if (path) {
+      const { pathStates, pathDirty } = state
+      const newDirty = pathDirty === 'all' ? null : pathDirty || new Map()
+      path.forEach(node => {
+        pathStates.set(node.id, 201)
+        newDirty && newDirty.set(node.id, true)
+      })
+      if (newDirty && newDirty !== pathDirty) {
+        commit('pathDirty', newDirty)
+      }
+    }
 
     // 显示结果（自动寻路时不显示）
     // console.log(path && path.map(i => `${i.x},${i.y}`).join(' > '))
-    if (times > 1 || !state.autoFind) {
+    if (times > 0) {
       const len = path && path.length - 1
       notify(
         `用时${B((Date.now() - tm) / 1000)}秒，${

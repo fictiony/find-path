@@ -1,12 +1,17 @@
 // 【绘图工具函数】
+import Vue from 'vue'
+
+let edit
 
 // 格子颜色
-const OBSTACLE_COLOR = [150, 100, 0] // 不同程度的障碍（Alpha分量31~230表示程度）
+const OBSTACLE_COLOR = [150, 100, 0, 30] // 不同程度的障碍（Alpha分量32~230表示状态值1~100）
 const WALL_COLOR = [150, 30, 60, 230] // 绝对阻挡不可通过
+const OPEN_COLOR = [100, 250, 100, 200] // 开启节点（Green分量240~50表示状态值1~20+）
+const CLOSE_COLOR = [50, 210, 210, 200] // 关闭节点（Green/Blue分量200~10表示状态值101~120+）
+const PATH_COLOR = [30, 120, 190, 250] // 路径节点
 
 // 算法类型
 export const ALGORITHMS = Object.freeze([
-  { value: 'astar', label: 'A*寻路' },
   { value: 'astar_h', label: 'A*寻路（曼哈顿距离）' },
   { value: 'astar_e', label: 'A*寻路（欧几里德距离）' },
   { value: 'astar_o', label: 'A*寻路（45°角距离）' },
@@ -54,9 +59,33 @@ export const BRUSH_TYPES = Object.freeze([
 // 格子状态值转格子颜色
 // - @state 格子状态值
 // - @return 格子颜色
-export function stateToColor (state) {
+export function gridToColor (state) {
   if (state > 100) return WALL_COLOR
-  if (state > 0) return [...OBSTACLE_COLOR, 30 + state * 2]
+  if (state > 0) {
+    const [r, g, b, a] = OBSTACLE_COLOR
+    return [r, g, b, a + state * 2]
+  }
+  return [0, 0, 0, 0]
+}
+
+// 寻路状态值转格子颜色
+// - @state 寻路状态值
+// - @return 格子颜色
+export function pathToColor (state) {
+  if (state > 200) return PATH_COLOR
+  edit = edit || Vue.store.state.edit
+  if (edit.showState) {
+    if (state > 100) {
+      const [r, g, b, a] = CLOSE_COLOR
+      const k = Math.min(20, state - 100) * 10
+      return [r, g - k, b - k, a]
+    }
+    if (state > 0) {
+      const [r, g, b, a] = OPEN_COLOR
+      const k = Math.min(20, state) * 10
+      return [r, g - k, b, a]
+    }
+  }
   return [0, 0, 0, 0]
 }
 

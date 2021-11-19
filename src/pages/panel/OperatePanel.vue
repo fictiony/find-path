@@ -48,8 +48,22 @@ export default {
         diagonalMove: { ...SELECT_PARAMS, label: '对角移动', options: DIAGONAL_MOVES }
       },
       {
-        showState: { ...TOGGLE_PARAMS, label: '寻路状态', dynamicParams: () => ({ ctrlParams: { label: vm.showState ? '实时显示' : '不显示' } }) },
-        showDelay: { ...NUM_PARAMS, label: '显示延时', minVal: 0, maxVal: 1000, suffix: 'ms' }
+        showState: {
+          ...TOGGLE_PARAMS,
+          label: '寻路状态',
+          tips: '绿色为开启节点，青色为关闭节点，蓝色为路径节点',
+          dynamicParams: () => ({ ctrlParams: { label: vm.showState ? '实时显示' : '不显示' } })
+        },
+        showDelay: {
+          ...NUM_PARAMS,
+          label: '显示延时',
+          tips: '每个寻路节点改变状态后要延时的毫秒数（精度0.001）',
+          minVal: 0,
+          maxVal: 1000,
+          precision: 3,
+          suffix: 'ms',
+          dynamicParams: () => ({ disable: !vm.showState })
+        }
       },
       {
         pointMode: {
@@ -105,7 +119,8 @@ export default {
 
   computed: {
     ...mapState('edit', ['startPos', 'endPos']),
-    ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'algorithm', 'diagonalMove', 'showState', 'showDelay', 'pointMode', 'autoFind']),
+    ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'pathDirty']),
+    ...mapStateRW('edit', ['algorithm', 'diagonalMove', 'showState', 'showDelay', 'pointMode', 'autoFind']),
     ...mapStateRW('edit', ['brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState'])
   },
 
@@ -117,14 +132,19 @@ export default {
       switch (field) {
         case 'xGrids':
         case 'yGrids':
+          this.clearGrids(true)
+          break
         case 'clearGrids':
           this.clearGrids()
+          break
+        case 'showState':
+          this.pathDirty = 'all'
           break
         case 'clearPoints':
           this.clearPoints()
           break
         case 'findPath':
-          this.findPath()
+          this.findPath(1)
           break
       }
     }

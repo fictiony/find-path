@@ -20,7 +20,7 @@
         v-bind="combineParams"
         label=""
         tips=""
-        v-on="{ ...$listeners, input: () => {} }"
+        v-on="itemListeners"
         @input="onInput(index - 1, $event)"
       />
     </template>
@@ -120,6 +120,11 @@ export default {
     combineParams() {
       const dynamicParams = this.item.dynamicParams ? this.item.dynamicParams() : null
       return { ...this.inputParams, ...this.item, ...dynamicParams, inputParams: { ...this.inputParams, ...this.item.inputParams } }
+    },
+
+    // 数组项事件监听列表
+    itemListeners() {
+      return { ...this.$listeners, input: () => {} }
     },
 
     // 是否嵌套

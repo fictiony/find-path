@@ -2,7 +2,7 @@
   <ZoomView
     ref="view"
     class="absolute-full"
-    :class="`bg-grey-${$q.dark.isActive ? 9 : 5}`"
+    :class="`bg-grey-${$q.dark.isActive ? 9 : 4}`"
     :min-x="Math.min(0, halfViewWidth - halfGridWidth - margin / viewZoom)"
     :max-x="Math.max(0, halfGridWidth + margin / viewZoom - halfViewWidth)"
     :min-y="Math.min(0, halfViewHeight - halfGridHeight - margin / viewZoom)"

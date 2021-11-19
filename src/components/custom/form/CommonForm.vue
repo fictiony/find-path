@@ -11,7 +11,7 @@
               :value="value[field]"
               :auto-save="autoSave"
               v-bind="getCombineParams(def)"
-              v-on="{ ...$listeners, input: () => {} }"
+              v-on="itemListeners"
               @input="onInput(def, field, $event)"
               v-if="field !== '$class' && field !== '$style'"
             />
@@ -29,7 +29,7 @@
           :value="value[field]"
           :auto-save="autoSave"
           v-bind="getCombineParams(def)"
-          v-on="{ ...$listeners, input: () => {} }"
+          v-on="itemListeners"
           @input="onInput(def, field, $event)"
           v-if="def"
         />
@@ -72,6 +72,11 @@ export default {
   },
 
   computed: {
+    // 表单项事件监听列表
+    itemListeners() {
+      return { ...this.$listeners, input: () => {} }
+    },
+
     // 判断是否有取值错误
     hasError() {
       return Object.keys(this.$refs).findIndex(i => this.getField(i).hasError) >= 0
