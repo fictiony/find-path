@@ -48,15 +48,15 @@ export default {
 
     // 画布图案数据
     canvasData() {
-      if (!this.gridStates) return
+      if (!this.gridStates) return // 格子状态表更改后也要重建
       return new ImageData(this.xGrids, this.yGrids)
     }
   },
 
   watch: {
-    // 网格数量改变后刷新全部网格
-    xGrids: 'refreshGrids',
-    yGrids: 'refreshGrids',
+    // 网格数量改变后刷新背景
+    xGrids: 'refreshBg',
+    yGrids: 'refreshBg',
 
     // 脏区域更改后自动刷新
     dirtyArea: 'refreshDirtyArea'
@@ -78,29 +78,22 @@ export default {
       this.bgPattern = ctx.createPattern(canvas, 'repeat')
     },
 
-    // 刷新背景
-    refreshBg() {
+    // 刷新背景（需延后，否则canvas可能还未重渲）
+    refreshBg: debounce(function () {
       const ctx = this.$refs.bg.getContext('2d')
       ctx.clearRect(0, 0, this.xGrids, this.yGrids)
       ctx.fillStyle = this.bgPattern
       ctx.fillRect(0, 0, this.xGrids, this.yGrids)
-    },
-
-    // 刷新全部网格
-    refreshGrids: debounce(function () {
-      const tm = Date.now()
-      this.refreshBg()
-      this.refreshDirtyArea()
-      console.log('用时', Date.now() - tm)
-    }, 100),
+    }, 0),
 
     // 刷新脏区域网格
-    refreshDirtyArea() {
+    refreshDirtyArea: debounce(function () {
       const { dirtyArea, gridStates } = this
       if (!dirtyArea) return
       const all = dirtyArea === 'all'
       const area = all ? gridStates : dirtyArea
       this.dirtyArea = null
+      const tm = Date.now()
 
       // 遍历脏区域更新像素颜色
       const { data, width, height } = this.canvasData
@@ -125,14 +118,17 @@ export default {
       if (all) {
         ctx.putImageData(this.canvasData, 0, 0)
       } else {
-        ctx.putImageData(this.canvasData, 0, 0, minX, minY, maxX - minX, maxY - minY)
+        ctx.putImageData(this.canvasData, 0, 0, minX, minY, maxX - minX + 1, maxY - minY + 1)
       }
-    }
+
+      all && console.log('用时', Date.now() - tm)
+    }, 0)
   },
 
   mounted() {
     this.initBgPattern()
-    this.refreshGrids()
+    this.refreshBg()
+    this.dirtyArea = 'all'
   }
 }
 </script>

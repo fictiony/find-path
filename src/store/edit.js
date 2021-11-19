@@ -293,7 +293,7 @@ const actions = {
       commit('yGrids', h)
       commit('gridStates', states)
       commit('dirtyArea', 'all')
-      notify('加载完成')
+      setTimeout(notify, 100, '加载完成')
     } else {
       showMsg('加载失败！')
     }
