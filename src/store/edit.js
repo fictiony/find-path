@@ -61,15 +61,28 @@ async function findPathNotify ({ id }, type) {
   if (showState && showDelay > 0) {
     delaySum += showDelay
     if (delaySum >= 10) {
-      const pf = fpCtx.getters.pathFinder
-      const ver = pf.findPathVer
-      await sleep(Math.floor(delaySum))
-      if (pf !== fpCtx.getters.pathFinder || ver !== pf.findPathVer) {
-        return true // 若延时过程中寻路环境改变，则取消本次寻路
-      }
+      if (await findPathDelay(Math.floor(delaySum))) return true
       delaySum = delaySum % 1
     }
   }
+
+  // 暂停寻路
+  while (fpCtx.state.findPaused) {
+    if (await findPathDelay()) return true
+  }
+}
+
+// 寻路延迟处理
+// - @delay 要延迟的时间（毫秒）
+// - @return 是否取消本次寻路
+async function findPathDelay (delay = 10) {
+  const pf = fpCtx.getters.pathFinder
+  const ver = pf.findPathVer
+  await sleep(delay)
+  if (pf !== fpCtx.getters.pathFinder || ver !== pf.findPathVer) {
+    return true // 若延时过程中寻路环境改变，则取消本次寻路
+  }
+  return false
 }
 
 // ----------------------------------------------------------------------------【state】
@@ -79,20 +92,17 @@ const state = () => ({
   gridSize: 20, // 格子边长
   gridStates: new Map(), // 格子状态表：{ 格子ID: 状态值 }，状态值可为：1~100-不同程度的阻碍/101~200-绝对阻挡不可通过/其他-无阻挡
   gridDirty: null, // 格子脏区域（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
+  findingPath: false, // 当前是否正在寻路中
   pathStates: new Map(), // 路径状态表：{ 格子ID: 状态值 }，状态值可为：1~100-不同刷新次数的开启节点/101~200-不同刷新次数的关闭节点/201路径节点/其他-无
   pathDirty: null, // 路径脏区域（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
 
-  algorithm: 'astar_h_heap', // 当前算法类型：
+  algorithm: 'astar_h', // 当前算法类型：
   // astar_h - A*寻路（曼哈顿距离）
   // astar_e - A*寻路（欧几里德距离）
   // astar_o - A*寻路（45°角距离）
   // astar_c - A*寻路（切比雪夫距离）
-  // astar_h_heap - A*寻路（曼哈顿距离 + 二叉堆排序）
-  // astar_e_heap - A*寻路（欧几里德距离 + 二叉堆排序）
-  // astar_o_heap - A*寻路（45°角距离 + 二叉堆排序）
-  // astar_c_heap - A*寻路（切比雪夫距离 + 二叉堆排序）
   // dijkstra - 最短路径寻路
-  // dijkstra_heap - 最短路径寻路（二叉堆排序）
+  heapSort: true, // 是否使用二叉堆排序寻路节点优先级
   diagonalMove: 2, // 是否可走对角线：0-不可走/1-无阻挡可走/2-非全阻挡可走/3-始终可走
   showState: false, // 寻路时是否显示实时状态（即节点开启关闭状态）
   showDelay: 0, // 显示每个寻路实时状态的延时时间（毫秒）
@@ -100,6 +110,7 @@ const state = () => ({
   startPos: null, // 当前寻路起点坐标：{x, y}
   endPos: null, // 当前寻路终点坐标：{x, y}
   autoFind: true, // 是否在选完起止点后立即自动寻路
+  findPaused: false, // 寻路是否已暂停
 
   brushMode: 1, // 笔刷模式：1-叠加/2-扣除/3-合并/4-清除/null-无
   brushType: 2, // 笔刷样式：1-方形/2-圆形/3-随机杂点/4-方形随机散布/5-圆形随机散布
@@ -184,7 +195,14 @@ const getters = {
   // 寻路算法对象
   pathFinder (state) {
     if (state.gridDirty) return null
-    const { xGrids, yGrids, gridStates, algorithm, diagonalMove } = state
+    const {
+      xGrids,
+      yGrids,
+      gridStates,
+      algorithm,
+      heapSort,
+      diagonalMove
+    } = state
 
     // 节点生成函数
     const genNode = id => {
@@ -200,27 +218,22 @@ const getters = {
     // 创建算法对象
     const options = {
       diagonalMove,
-      heapSort: algorithm.endsWith('_heap')
+      heapSort
     }
     switch (algorithm) {
       case 'astar_h':
-      case 'astar_h_heap':
         options.heuristic = 'manhattan'
         return new AStarPathFinder(genNode, options)
       case 'astar_e':
-      case 'astar_e_heap':
         options.heuristic = 'euclidean'
         return new AStarPathFinder(genNode, options)
       case 'astar_o':
-      case 'astar_o_heap':
         options.heuristic = 'octile'
         return new AStarPathFinder(genNode, options)
       case 'astar_c':
-      case 'astar_c_heap':
         options.heuristic = 'chebyshev'
         return new AStarPathFinder(genNode, options)
       case 'dijkstra':
-      case 'dijkstra_heap':
         return new DijkstraPathFinder(genNode, options)
     }
     return null
@@ -235,9 +248,11 @@ const mutations = {
     'gridSize',
     'gridStates',
     'gridDirty',
+    'findingPath',
     'pathStates',
     'pathDirty',
     'algorithm',
+    'heapSort',
     'diagonalMove',
     'showState',
     'showDelay',
@@ -245,6 +260,7 @@ const mutations = {
     'startPos',
     'endPos',
     'autoFind',
+    'findPaused',
     'brushMode',
     'brushType',
     'brushSize',
@@ -464,7 +480,7 @@ const actions = {
 
   // 寻路
   // - @times 重复次数（0表示自动寻路）
-  async findPath ({ state, getters, commit, dispatch }, times = 0) {
+  async findPath ({ state, getters, commit, dispatch }, times = 1) {
     const { startPos, endPos } = state
     const pf = getters.pathFinder
     if (process.env.DEBUGGING) {
@@ -480,6 +496,8 @@ const actions = {
     let tm, path
 
     // 开始寻路
+    commit('findingPath', true)
+    commit('findPaused', false)
     if (times > 1) {
       // 若重复次数>1，则不加节点状态通知，以便保证最高性能
       commit('main/loading', '正在处理... 请稍候', ROOT)
@@ -513,6 +531,7 @@ const actions = {
       pf.updateNotify = null
       pf.closeNotify = null
     }
+    commit('findingPath', false)
 
     // 显示路径
     if (path) {

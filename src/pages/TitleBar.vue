@@ -62,6 +62,12 @@ export default {
         }
       }),
       null,
+      {
+        label: '采用二叉堆排序',
+        icon: () => (vm.heapSort ? 'done' : ''),
+        handler: () => (vm.heapSort = !vm.heapSort)
+      },
+      null,
       ...DIAGONAL_MOVES.map(i => {
         return {
           label: i.label,
@@ -198,10 +204,10 @@ export default {
       },
       null,
       {
-        label: '进行寻路', // 暂停寻路、继续寻路
-        icon: 'play_arrow',
+        label: () => (!vm.findingPath ? '开始寻路' : vm.findPaused ? '继续寻路' : '暂停寻路'),
+        icon: () => (!vm.findingPath || vm.findPaused ? 'play_arrow' : 'pause'),
         shortcut: 'F9',
-        handler: vm.findPath,
+        handler: () => (vm.findingPath ? (vm.findPaused = !vm.findPaused) : vm.findPath()),
         disable: () => !vm.startPos || !vm.endPos
       },
       {
@@ -288,6 +294,11 @@ export default {
         keyScope: 'all',
         handler: vm.showStat
       },
+      {
+        label: '获取源码 gitee.com',
+        icon: 'code',
+        handler: () => window.open('https://gitee.com/fictiony/find-path', '_blank')
+      },
       ...(vm.$inspector
         ? [
             {
@@ -318,8 +329,8 @@ export default {
     ...mapState('main', ['appTitle', 'loading', 'maximized', 'viewZoom', 'uiZoom']),
     ...mapStateRW('main', ['darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom']),
-    ...mapState('edit', ['startPos', 'endPos']),
-    ...mapStateRW('edit', ['algorithm', 'diagonalMove', 'showState', 'pointMode', 'autoFind']),
+    ...mapState('edit', ['findingPath', 'startPos', 'endPos']),
+    ...mapStateRW('edit', ['algorithm', 'heapSort', 'diagonalMove', 'showState', 'pointMode', 'autoFind', 'findPaused']),
     ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir'])
   },
 

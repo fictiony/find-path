@@ -45,6 +45,7 @@ export default {
       },
       {
         algorithm: { ...SELECT_PARAMS, label: '算法类型', options: ALGORITHMS },
+        heapSort: { ...TOGGLE_PARAMS, label: '采用二叉堆排序', tips: '路径长时可显著提升性能' },
         diagonalMove: { ...SELECT_PARAMS, label: '对角移动', options: DIAGONAL_MOVES }
       },
       {
@@ -57,7 +58,7 @@ export default {
         showDelay: {
           ...NUM_PARAMS,
           label: '显示延时',
-          tips: '每个寻路节点改变状态后要延时的毫秒数（精度0.001）',
+          tips: '每个寻路节点改变状态后要延迟显示的毫秒数（精度0.001）',
           minVal: 0,
           maxVal: 1000,
           precision: 3,
@@ -77,8 +78,11 @@ export default {
         autoFind: { ...TOGGLE_PARAMS, label: '自动寻路' },
         findPath: {
           ...BTN_PARAMS,
-          label: '寻路', // 暂停、继续
-          dynamicParams: () => (!vm.startPos || !vm.endPos ? { disable: true, style: 'opacity: 0.3 !important' } : {})
+          dynamicParams: () => ({
+            label: !vm.findingPath ? '开始寻路' : vm.findPaused ? '继续寻路' : '暂停寻路',
+            icon: !vm.findingPath || vm.findPaused ? 'play_arrow' : 'pause',
+            ...(!vm.startPos || !vm.endPos ? { disable: true, style: 'opacity: 0.3 !important' } : {})
+          })
         }
       },
       {
@@ -119,8 +123,8 @@ export default {
 
   computed: {
     ...mapState('edit', ['startPos', 'endPos']),
-    ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'pathDirty']),
-    ...mapStateRW('edit', ['algorithm', 'diagonalMove', 'showState', 'showDelay', 'pointMode', 'autoFind']),
+    ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'findingPath', 'pathDirty']),
+    ...mapStateRW('edit', ['algorithm', 'heapSort', 'diagonalMove', 'showState', 'showDelay', 'pointMode', 'autoFind', 'findPaused']),
     ...mapStateRW('edit', ['brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState'])
   },
 
@@ -144,7 +148,11 @@ export default {
           this.clearPoints()
           break
         case 'findPath':
-          this.findPath(1)
+          if (this.findingPath) {
+            this.findPaused = !this.findPaused
+          } else {
+            this.findPath()
+          }
           break
       }
     }

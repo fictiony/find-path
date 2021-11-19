@@ -79,13 +79,13 @@ export default {
       if (val) {
         this.pointMode = 2
         if (this.endPos && this.autoFind) {
-          this.findPath()
+          this.findPath(0)
         }
       }
     },
     endPos(val) {
       if (val && this.startPos && this.autoFind) {
-        this.findPath()
+        this.findPath(0)
       }
     }
   },

@@ -16,13 +16,7 @@ export const ALGORITHMS = Object.freeze([
   { value: 'astar_e', label: 'A*寻路（欧几里德距离）' },
   { value: 'astar_o', label: 'A*寻路（45°角距离）' },
   { value: 'astar_c', label: 'A*寻路（切比雪夫距离）' },
-  { value: 'astar_heap', label: 'A*寻路（二叉堆排序）' },
-  { value: 'astar_h_heap', label: 'A*寻路（曼哈顿距离 + 二叉堆排序）' },
-  { value: 'astar_e_heap', label: 'A*寻路（欧几里德距离 + 二叉堆排序）' },
-  { value: 'astar_o_heap', label: 'A*寻路（45°角距离 + 二叉堆排序）' },
-  { value: 'astar_c_heap', label: 'A*寻路（切比雪夫距离 + 二叉堆排序）' },
-  { value: 'dijkstra', label: '最短路径寻路' },
-  { value: 'dijkstra_heap', label: '最短路径寻路（二叉堆排序）' }
+  { value: 'dijkstra', label: '最短路径寻路' }
 ])
 
 // 对角线可走类型
