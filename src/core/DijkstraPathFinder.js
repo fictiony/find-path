@@ -16,6 +16,7 @@ export default class DijkstraPathFinder extends BasePathFinder {
   // - @options 功能选项增加：
   //    heapSort: 节点优先级是否采用二叉堆排序，否则用数组快速排序（当节点数多时二叉堆排序可显著提升性能），默认为true
   //    openNotify: 节点开启通知函数（可选）
+  //    updateNotify: 节点更新通知函数（可选）
   //    closeNotify: 节点关闭通知函数（可选）
   constructor (genNode, options = {}) {
     super(genNode, options)
