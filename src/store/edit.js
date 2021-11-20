@@ -193,17 +193,40 @@ const getters = {
     return states
   },
 
+  // 网格状态统计
+  // - @return 统计情况：{ blockCount: 绝对阻挡格数量, blockPercent: 绝对阻挡格百分比, emptyCount: 空格数量, emptyPercent: 空格百分比,
+  //    totalCost: 网格总消耗, averageCost: 网格平均消耗 }
+  gridStats (state) {
+    const { xGrids, yGrids, gridStates, gridDirty } = state
+    if (gridDirty) return null
+    const totalCount = xGrids * yGrids
+    let blockCount = 0
+    let emptyCount = totalCount
+    let totalCost = totalCount
+    gridStates.forEach(state => {
+      if (state > 100) {
+        blockCount++
+        emptyCount--
+        totalCost--
+      } else if (state > 0) {
+        emptyCount--
+        totalCost += Math.exp(state / 20) - 1
+      }
+    })
+    return {
+      blockCount,
+      blockPercent: (blockCount / totalCount) * 100,
+      emptyCount,
+      emptyPercent: (emptyCount / totalCount) * 100,
+      totalCost,
+      averageCost: totalCost / (totalCount - blockCount)
+    }
+  },
+
   // 寻路算法对象
   pathFinder (state) {
-    if (state.gridDirty) return null
-    const {
-      xGrids,
-      yGrids,
-      gridStates,
-      algorithm,
-      heapSort,
-      diagonalMove
-    } = state
+    const { xGrids, yGrids, gridStates, gridDirty } = state
+    if (gridDirty) return null
 
     // 节点生成函数
     const genNode = id => {
@@ -217,6 +240,7 @@ const getters = {
     }
 
     // 创建算法对象
+    const { algorithm, heapSort, diagonalMove } = state
     const options = {
       diagonalMove,
       heapSort

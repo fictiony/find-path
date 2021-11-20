@@ -141,6 +141,13 @@ export default {
         icon: 'filter_9_plus',
         shortcut: '`',
         handler: () => (vm.brushState = 200)
+      },
+      null,
+      {
+        label: '障碍情况统计...',
+        icon: 'list_alt',
+        shortcut: 'F8',
+        handler: vm.showGridStats
       }
     ],
     editMenu: [
@@ -177,14 +184,14 @@ export default {
       },
       {
         label: '显示寻路状态',
-        shortcut: 'F6',
         icon: () => (vm.showState ? 'done' : ''),
+        shortcut: 'F6',
         handler: () => (vm.showState = !vm.showState)
       },
       {
         label: '自动寻路',
-        shortcut: 'F7',
         icon: () => (vm.autoFind ? 'done' : ''),
+        shortcut: 'F7',
         handler: () => (vm.autoFind = !vm.autoFind)
       },
       null,
@@ -314,6 +321,17 @@ export default {
                 console.log('【笔刷】\n', vm.$store.getters['edit/brushStates'].slice())
                 console.log('【全图】\n', vm.$store.state.edit.gridStates.entries())
               }
+            },
+            {
+              label: '性能测试',
+              handler: () =>
+                import('src/core/benchmark').then(async module => {
+                  window.benchmark = module.default
+                  vm.loading = '正在测试中... 请稍候'
+                  await vm.$sleep(100)
+                  await window.benchmark(100)
+                  vm.loading = false
+                })
             }
           ]
         : []),
@@ -326,12 +344,13 @@ export default {
   }),
 
   computed: {
-    ...mapState('main', ['appTitle', 'loading', 'maximized', 'viewZoom', 'uiZoom']),
-    ...mapStateRW('main', ['darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
+    ...mapState('main', ['appTitle', 'maximized', 'viewZoom', 'uiZoom']),
+    ...mapStateRW('main', ['loading', 'darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom']),
     ...mapState('edit', ['findingPath', 'startPos', 'endPos']),
     ...mapStateRW('edit', ['algorithm', 'heapSort', 'diagonalMove', 'showState', 'pointMode', 'autoFind', 'findPaused']),
-    ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir'])
+    ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir']),
+    ...mapGetters('edit', ['gridStats'])
   },
 
   watch: {
@@ -373,6 +392,17 @@ export default {
     // 退出
     quit() {
       this.$appCall('quit')
+    },
+
+    // 障碍情况统计
+    showGridStats() {
+      const stats = this.gridStats
+      const lines = [
+        `<b>绝对阻挡</b>： ${stats.blockCount} 格 <span class='text-grey'>（占 ${stats.blockPercent.toFixed(2)}%）</span>`,
+        `<b>完全通畅</b>： ${stats.emptyCount} 格 <span class='text-grey'>（占 ${stats.emptyPercent.toFixed(2)}%）</span>`,
+        `<b>平均障碍</b>： ${stats.averageCost.toFixed(2)} <span class='text-grey'>（总和 ${stats.totalCost.toFixed(2)}）</span>`
+      ]
+      this.$showMsg(lines.join('<br/>'), '障碍情况统计')
     },
 
     // 重置UI布局

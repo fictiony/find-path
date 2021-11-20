@@ -65,16 +65,17 @@ export default class BasePathFinder {
       if ((n3 = this.getNodeAt(x + 1, y))) neighbors.push(n3)
       if ((n4 = this.getNodeAt(x, y + 1))) neighbors.push(n4)
 
+      // 可走对角线
       if (this.diagonalMove) {
         let n5, n6, n7, n8
         switch (this.diagonalMove) {
-          case 1:
+          case 1: // 无阻挡可走
             n5 = !n1 || !n2
             n6 = !n1 || !n3
             n7 = !n2 || !n4
             n8 = !n3 || !n4
             break
-          case 2:
+          case 2: // 非全阻挡可走
             n5 = !n1 && !n2
             n6 = !n1 && !n3
             n7 = !n2 && !n4

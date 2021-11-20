@@ -21,9 +21,11 @@ export default {
         const { x, y } = this.brushPos
         const id = PathNode.xyToId(x, y)
         parts.push(`🖱️ ${x}, ${y}`)
-        parts.push(`🅱️ ${this.gridStates.get(id) || 0}`)
-        const state = this.pathStates.get(id)
-        state && parts.push(`🔀 ${state}`)
+        let state = this.gridStates.get(id) || 0
+        const cost = state > 100 ? '∞' : Math.exp(state / 20).toFixed(2)
+        parts.push(`🅱️ ${state} = ${cost}`)
+        state = this.pathStates.get(id)
+        state && parts.push(`🔀 ${state} ${state > 200 ? '路径' : state > 100 ? '关闭' : '开启'}`)
       }
       return parts.join('　')
     }
