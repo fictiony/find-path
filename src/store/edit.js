@@ -100,7 +100,7 @@ const state = () => ({
   algorithm: 'astar_h', // 当前算法类型：
   // astar_h - A*寻路（曼哈顿距离）
   // astar_e - A*寻路（欧几里德距离）
-  // astar_o - A*寻路（45°角距离）
+  // astar_o - A*寻路（八分角距离）
   // astar_c - A*寻路（切比雪夫距离）
   // dijkstra - 最短路径寻路
   heapSort: true, // 是否使用二叉堆排序寻路节点优先级

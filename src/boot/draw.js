@@ -14,7 +14,7 @@ const PATH_COLOR = [30, 120, 190, 250] // 路径节点
 export const ALGORITHMS = Object.freeze([
   { value: 'astar_h', label: 'A*寻路（曼哈顿距离）' },
   { value: 'astar_e', label: 'A*寻路（欧几里德距离）' },
-  { value: 'astar_o', label: 'A*寻路（45°角距离）' },
+  { value: 'astar_o', label: 'A*寻路（八分角距离）' },
   { value: 'astar_c', label: 'A*寻路（切比雪夫距离）' },
   { value: 'dijkstra', label: '最短路径寻路' }
 ])

@@ -1,10 +1,10 @@
 // 【A*寻路算法】
 // - 最短路径寻路算法的改进版本，开启节点的优先级按可选的启发函数来调整，值越小的越优先
-// - 优先级计算公式为：路径长度 + 启发函数值，相等时启发函数值小的更优先（有利于接近目标点的节点扩展）
+// - 优先级(f)计算公式为：路径长度(g) + 启发函数值(h)，相等时启发函数值小的更优先（有利于更接近目标点的节点扩展）
 // - 常用启发函数值有（dx、dy为当前节点距离终点的横坐标和纵坐标差）：
 //   1. 曼哈顿距离（dx + dy）
 //   2. 欧几里德距离（sqrt(dx² + dy²)）
-//   3. 45°角距离（|dx - dy| + min(dx, dy) * √2）
+//   3. 八分角距离（max(dx, dy) + min(dx, dy) * (√2-1)）
 //   4. 切比雪夫距离（max(dx + dy)）
 
 import DijkstraPathFinder from './DijkstraPathFinder'
@@ -36,9 +36,9 @@ export default class AStarPathFinder extends DijkstraPathFinder {
     return Math.hypot(dx, dy)
   }
 
-  // 45°角距离
+  // 八分角距离
   static octile (dx, dy) {
-    return dx < dy ? dx * SQRT2_1 + dy : dy * SQRT2_1 + dx
+    return dx > dy ? dx + dy * SQRT2_1 : dy + dx * SQRT2_1
   }
 
   // 切比雪夫距离

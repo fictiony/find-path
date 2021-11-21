@@ -329,7 +329,7 @@ export default {
                   window.benchmark = module.default
                   vm.loading = '正在测试中... 请稍候'
                   await vm.$sleep(100)
-                  await window.benchmark(100)
+                  await window.benchmark()
                   vm.loading = false
                 })
             }

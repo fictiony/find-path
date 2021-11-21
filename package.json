@@ -16,7 +16,6 @@
     "@quasar/extras": "^1.0.0",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
-    "heap": "^0.2.6",
     "keymaster": "^1.6.2",
     "quasar": "^1.15.10",
     "three-stats": "^1.0.1"
