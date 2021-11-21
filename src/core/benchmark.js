@@ -6,7 +6,8 @@ export default async function benchmark (
   times = 100, // run times
   size = 1000, // edge length of the square map
   ratio = 0.2, // ratio of the block grids
-  diagonal = true // whether diagonal moves are allowed
+  diagonal = true, // whether diagonal moves are allowed
+  showStats = false // Count the times of node open/update/close and show the stats
 ) {
   const rand = () => Math.floor(Math.random() * size)
   const now = () => (performance ? performance.now() : Date.now())
@@ -31,6 +32,22 @@ export default async function benchmark (
   const options2 = {
     heuristic: astar2.heuristics[diagonal ? 'diagonal' : 'manhattan']
   }
+  const stats = {
+    open: 0,
+    update: 0,
+    close: 0,
+    open2: 0,
+    update2: 0,
+    close2: 0
+  }
+  if (showStats) {
+    astar.openNotify = () => !++stats.open
+    astar.updateNotify = () => !++stats.update
+    astar.closeNotify = () => !++stats.close
+    options2.openNotify = () => !++stats.open2
+    options2.updateNotify = () => !++stats.update2
+    options2.closeNotify = () => !++stats.close2
+  }
 
   // run tests
   const results = []
@@ -42,22 +59,20 @@ export default async function benchmark (
     while (!end)
     start2 = graph.grid[start.x][start.y]
     end2 = graph.grid[end.x][end.y]
+    Object.keys(stats).forEach(i => (stats[i] = 0))
+
     const beginTime = now()
     const path = await astar.findPath(start, end)
     const endTime = now()
-    const path2 = astar2.search(graph, start2, end2, options2)
+    const path2 = await astar2.search(graph, start2, end2, options2)
     const endTime2 = now()
+
     results.push({
       path,
-      open: astar.openNodes.pushCount,
-      update: astar.openNodes.updateCount,
-      close: astar.openNodes.popCount,
       time: endTime - beginTime,
       path2,
-      open2: astar2.openHeap.pushCount,
-      update2: astar2.openHeap.updateCount,
-      close2: astar2.openHeap.popCount,
-      time2: endTime2 - endTime
+      time2: endTime2 - endTime,
+      ...stats
     })
   }
 
@@ -72,15 +87,15 @@ export default async function benchmark (
     if (i < 100) {
       console.log(
         `#${i}:`,
-        path ? `Found path with ${path.length} steps` : 'Found no path',
-        `(${open} + ${update} + ${close})`,
+        path ? `Found path with ${path.length - 1} steps` : 'Found no path',
+        showStats ? `(${open} + ${update} + ${close})` : '',
         `in ${time.toFixed(2)} ms. ${time > time2 ? '' : '---------- better'}`
       )
       console.log(
         path2
           ? `Others found path with ${path2.length} steps`
           : 'Found no path',
-        `(${open2} + ${update2} + ${close2})`,
+        showStats ? `(${open2} + ${update2} + ${close2})` : '',
         `in ${time2.toFixed(2)} ms.`
       )
     }

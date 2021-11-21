@@ -14,7 +14,6 @@ export default class SortedNodes {
     if (!heapSort) {
       this.compare = (a, b) => -compare(a, b) // 数组排序时优先级高的放最后，方便取出
     }
-    this.clear()
   }
 
   // 是否为空
@@ -24,7 +23,6 @@ export default class SortedNodes {
 
   // 添加节点
   push (node) {
-    this.pushCount++
     this.nodes.push(node)
     if (this.heapSort) {
       this.__sinkDown(this.nodes.length - 1)
@@ -35,7 +33,6 @@ export default class SortedNodes {
 
   // 取出优先级最高的节点
   pop () {
-    this.popCount++
     if (this.isEmpty) return
     const { nodes } = this
     if (this.heapSort) {
@@ -57,7 +54,6 @@ export default class SortedNodes {
 
   // 更新节点顺序
   update (node) {
-    this.updateCount++
     if (this.heapSort) {
       this.__sinkDown(this.nodes.indexOf(node))
     } else {
@@ -68,9 +64,6 @@ export default class SortedNodes {
   // 清空节点列表
   clear () {
     this.nodes.length = 0
-    this.pushCount = 0
-    this.popCount = 0
-    this.updateCount = 0
   }
 
   // 沉入节点到合适的位置

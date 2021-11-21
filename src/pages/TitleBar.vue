@@ -36,6 +36,8 @@ import { mapStateRW } from 'boot/utils'
 import * as dlg from 'pages/dialog'
 import { ALGORITHMS, DIAGONAL_MOVES, POINT_MODES, BRUSH_MODES } from 'boot/draw'
 import { Stats } from 'three-stats'
+import benchmark from 'src/core/benchmark'
+window.benchmark = benchmark
 
 // 浮动面板
 const FLOAT_PANELS = {
@@ -306,6 +308,16 @@ export default {
         icon: 'code',
         handler: () => window.open('https://gitee.com/fictiony/find-path', '_blank')
       },
+      {
+        label: '性能测试',
+        icon: 'timer',
+        handler: async () => {
+          vm.loading = '正在测试中... 请稍候'
+          await vm.$sleep(100)
+          await benchmark()
+          vm.loading = false
+        }
+      },
       ...(vm.$inspector
         ? [
             {
@@ -321,17 +333,6 @@ export default {
                 console.log('【笔刷】\n', vm.$store.getters['edit/brushStates'].slice())
                 console.log('【全图】\n', vm.$store.state.edit.gridStates.entries())
               }
-            },
-            {
-              label: '性能测试',
-              handler: () =>
-                import('src/core/benchmark').then(async module => {
-                  window.benchmark = module.default
-                  vm.loading = '正在测试中... 请稍候'
-                  await vm.$sleep(100)
-                  await window.benchmark()
-                  vm.loading = false
-                })
             }
           ]
         : []),

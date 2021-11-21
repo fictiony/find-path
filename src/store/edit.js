@@ -12,6 +12,7 @@ import {
 import PathNode from 'src/core/PathNode'
 import AStarPathFinder from 'src/core/AStarPathFinder'
 import DijkstraPathFinder from 'src/core/DijkstraPathFinder'
+import { astar, Graph } from 'src/core/javascript-astar'
 
 // ----------------------------------------------------------------------------【utils】
 
@@ -24,14 +25,15 @@ let closeCount = 0 // 节点关闭计数
 let delaySum = 0 // 累积延时时间（毫秒）
 
 // 寻路状态通知函数
-// - @id 节点ID
+// - @node 节点
 // - @type 通知类型
-async function findPathNotify ({ id }, type) {
+async function findPathNotify (node, type) {
   const { pathStates, pathDirty, showState, showDelay } = fpCtx.state
   const newDirty =
     !showState || pathDirty === 'all' ? null : pathDirty || new Map()
 
   // 更新寻路状态
+  const id = node.id == null ? PathNode.xyToId(node.x, node.y) : node.id
   let state = pathStates.get(id) || 0
   switch (type) {
     case 0:
@@ -103,6 +105,8 @@ const state = () => ({
   // astar_o - A*寻路（八分角距离）
   // astar_c - A*寻路（切比雪夫距离）
   // dijkstra - 最短路径寻路
+  // js_astar - 第三方A*（曼哈顿距离）
+  // js_astar_d - 第三方A*（八分角距离）
   heapSort: true, // 是否使用二叉堆排序寻路节点优先级
   diagonalMove: 2, // 是否可走对角线：0-不可走/1-无阻挡可走/2-非全阻挡可走/3-始终可走
   showState: false, // 寻路时是否显示实时状态（即节点开启关闭状态）
@@ -223,8 +227,23 @@ const getters = {
     }
   },
 
+  // 网格状态图
+  graphGrids (state) {
+    const { xGrids, yGrids, gridStates, gridDirty } = state
+    if (gridDirty) return null
+    const grids = []
+    for (let x = 0; x < xGrids; x++) {
+      const row = (grids[x] = [])
+      for (let y = 0; y < yGrids; y++) {
+        const state = gridStates.get(PathNode.xyToId(x, y)) || 0
+        row[y] = state > 100 ? 0 : Math.exp(state / 20)
+      }
+    }
+    return grids
+  },
+
   // 寻路算法对象
-  pathFinder (state) {
+  pathFinder (state, getters) {
     const { xGrids, yGrids, gridStates, gridDirty } = state
     if (gridDirty) return null
 
@@ -260,6 +279,28 @@ const getters = {
         return new AStarPathFinder(genNode, options)
       case 'dijkstra':
         return new DijkstraPathFinder(genNode, options)
+      case 'js_astar':
+      case 'js_astar_d':
+        return {
+          graph: new Graph(getters.graphGrids, {
+            diagonal: diagonalMove === 3
+          }),
+          heuristic:
+            algorithm === 'js_astar_d' ? astar.heuristics.diagonal : null,
+          getNodeAt (x, y) {
+            const row = this.graph.grid[x]
+            if (!row) return
+            const node = row[y]
+            if (!node || node.weight === 0) return
+            return node
+          },
+          async findPath (start, end) {
+            const path = await astar.search(this.graph, start, end, this)
+            if (!path) return null
+            path.unshift(start)
+            return path.map(i => ({ id: PathNode.xyToId(i.x, i.y), ...i }))
+          }
+        }
     }
     return null
   }
@@ -590,7 +631,7 @@ const actions = {
         `用时${B((Date.now() - tm) / 1000)}秒，${
           path
             ? `成功找到路径，共${B(len)}步，距离${B(
-                path[len].distance.toFixed(3)
+                (path[len].distance || path[len].g).toFixed(3)
               )}`
             : '未找到路径'
         }${

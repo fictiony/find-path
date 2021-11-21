@@ -30,13 +30,14 @@ const astar = {
   //            path to the closest node if the target is unreachable.
   // * @param {Function} [options.heuristic] Heuristic function (see
   // *          astar.heuristics).
-  search: function (graph, start, end, options) {
+  search: async function (graph, start, end, options) {
     graph.cleanDirty()
     options = options || {}
     const heuristic = options.heuristic || astar.heuristics.manhattan
     const closest = options.closest || false
 
     const openHeap = (astar.openHeap = getHeap())
+    const { openNotify, updateNotify, closeNotify } = options
     let closestNode = start // set the start node to be the closest if required
 
     start.h = heuristic(start, end)
@@ -55,6 +56,7 @@ const astar = {
 
       // Normal case -- move currentNode from open to closed, process each of its neighbors.
       currentNode.closed = true
+      if (closeNotify && (await closeNotify(currentNode, 0))) return null
 
       // Find all neighbors for the current node.
       const neighbors = graph.neighbors(currentNode)
@@ -94,9 +96,11 @@ const astar = {
           if (!beenVisited) {
             // Pushing to heap will put it in proper place based on the 'f' value.
             openHeap.push(neighbor)
+            if (openNotify && (await openNotify(neighbor, 1))) return null
           } else {
             // Already seen the node, but since it has been rescored we need to reorder it in the heap
             openHeap.rescoreElement(neighbor)
+            if (updateNotify && (await updateNotify(neighbor, 2))) return null
           }
         }
       }
@@ -106,8 +110,8 @@ const astar = {
       return pathTo(closestNode)
     }
 
-    // No result was found - empty array signifies failure to find path.
-    return []
+    // No result was found
+    return null
   },
   // See list of heuristics: http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
   heuristics: {
@@ -118,7 +122,7 @@ const astar = {
     },
     diagonal: function (pos0, pos1) {
       const D = 1
-      const D2 = Math.sqrt(2)
+      const D2 = Math.SQRT2
       const d1 = Math.abs(pos1.x - pos0.x)
       const d2 = Math.abs(pos1.y - pos0.y)
       return D * (d1 + d2) + (D2 - 2 * D) * Math.min(d1, d2)
@@ -251,7 +255,7 @@ GridNode.prototype.toString = function () {
 GridNode.prototype.getCost = function (fromNeighbor) {
   // Take diagonal weight into consideration.
   if (fromNeighbor && fromNeighbor.x !== this.x && fromNeighbor.y !== this.y) {
-    return this.weight * 1.41421
+    return this.weight * Math.SQRT2
   }
   return this.weight
 }
@@ -263,21 +267,16 @@ GridNode.prototype.isWall = function () {
 function BinaryHeap (scoreFunction) {
   this.content = []
   this.scoreFunction = scoreFunction
-  this.pushCount = 0
-  this.popCount = 0
-  this.updateCount = 0
 }
 
 BinaryHeap.prototype = {
   push: function (element) {
-    this.pushCount++
     // Add the new element to the end of the array.
     this.content.push(element)
     // Allow it to sink down.
     this.sinkDown(this.content.length - 1)
   },
   pop: function () {
-    this.popCount++
     // Store the first element so we can return it later.
     const result = this.content[0]
     // Get the element at the end of the array.
@@ -294,7 +293,6 @@ BinaryHeap.prototype = {
     return this.content.length
   },
   rescoreElement: function (node) {
-    this.updateCount++
     this.sinkDown(this.content.indexOf(node))
   },
   sinkDown: function (n) {
