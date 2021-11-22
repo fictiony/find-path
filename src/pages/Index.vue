@@ -10,14 +10,14 @@
     :zoom.sync="viewZoom"
     :min-zoom="minViewZoom"
     :max-zoom="maxViewZoom"
-    @start-drag="$setCursor('grabbing')"
-    @stop-drag="$setCursor(showDrawCursor ? 'crosshair' : '')"
+    @start-drag="refreshCursor"
+    @stop-drag="refreshCursor"
     @resize="(w, h) => ((halfViewWidth = w / 2), (halfViewHeight = h / 2))"
     @mousedown.native.capture="onPress"
     @mousedown.native="$clearFocus"
     @mouseup.native="brushDown = false"
     @mousemove.native="onMouseMove"
-    @mouseout.native.self="brushPos = null"
+    @mouseout.native="brushPos = null"
     @touchstart.native.capture="onPress"
     @touchstart.native="$clearFocus"
     @touchend.native=";(brushPos = null), (brushDown = false)"
@@ -58,7 +58,7 @@ export default {
 
     // 是否显示绘制光标
     showDrawCursor() {
-      return this.brushDown || !!((this.pointMode || this.brushMode) && this.brushPos && !this.isDragging)
+      return this.brushDown || !!((this.pointMode || this.brushMode) && this.brushPos)
     }
   },
 
@@ -70,9 +70,7 @@ export default {
 
   watch: {
     // 切换绘制光标
-    showDrawCursor(val) {
-      this.$setCursor(val ? 'crosshair' : '')
-    },
+    showDrawCursor: 'refreshCursor',
 
     // 起始点改变后自动切换到终点，起止点都指定后自动寻路
     startPos(val) {
@@ -102,6 +100,11 @@ export default {
       return { x, y }
     },
 
+    // 刷新鼠标光标
+    refreshCursor() {
+      this.$setCursor(this.isDragging ? 'grabbing' : this.showDrawCursor ? 'crosshair' : '')
+    },
+
     // 按下处理
     onPress(e) {
       this.onMouseMove(e)
@@ -109,7 +112,7 @@ export default {
       if (key.isPressed(32)) return // 空格键按下时改为拖拽视图
 
       // 屏蔽视图拖拽
-      this.$refs.view.$forceSet('interactive', false) // 若在模板中绑定该属性，会由于模板刷新导致click事件无法被屏蔽
+      this.$refs.view.$forceSet('interactive', false) // 若在模板中绑定该属性，会引发不必要的模板刷新
       setTimeout(() => {
         this.$refs.view.$forceSet('interactive', true)
       })
