@@ -2,10 +2,7 @@
   <div class="row items-center">
     <label class="q-mr-sm" :class="labelClass" :style="combineLabelStyle" v-if="label">
       {{ label }}
-      <q-tooltip max-width="400px" anchor="top left" self="top right" v-if="tips">
-        <q-markdown :src="tips" v-if="mdTips" />
-        <template v-else>{{ tips }}</template>
-      </q-tooltip>
+      <CommonTips :tips="tips" v-if="tips" />
     </label>
     <template v-for="index in count">
       <label :key="'L' + index" class="q-mx-sm" :class="labelClass" :style="labelStyle" v-if="spacer && index &gt; 1">
@@ -36,15 +33,17 @@
 <script>
 // 【通用数组】
 import { INPUT, NESTED } from 'components/custom/form'
+import CommonTips from './CommonTips.vue'
 
 export default {
+  components: { CommonTips },
+
   props: {
     label: String, // 左侧文字标签
     labelClass: [String, Array, Object], // 左侧文字标签样式
     labelStyle: Object,
     labelWidth: Number, // 左侧文字标签宽度
-    tips: String, // 提示说明文字
-    mdTips: Boolean, // 提示是否采用Markdown格式
+    tips: [String, Array], // 提示说明文字
     item: {
       // 数组项定义，格式为：{ t: 输入框类型（参见INPUT，默认为num）, dynamicParams: 动态参数表获取函数（若指定，则需返回动态参数表）,
       // onInput: 输入事件处理函数（参数为：输入值, 输入框组件）, ...输入框组件参数 }

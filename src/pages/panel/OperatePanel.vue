@@ -10,7 +10,7 @@
 <script>
 // 【操作面板】
 import { mapState, mapActions } from 'vuex'
-import { mapStateRW } from 'boot/utils'
+import { mapStateRW, B } from 'boot/utils'
 import { ALGORITHMS, DIAGONAL_MOVES, POINT_MODES, BRUSH_MODES, BRUSH_TYPES } from 'boot/draw'
 import { QBtnToggle, QBadge, QSlider, QSelect, QToggle } from 'quasar'
 
@@ -41,18 +41,44 @@ export default {
         xGrids: { ...NUM_PARAMS, label: '横向格数', defVal: 100, minVal: 10, maxVal: 10000 },
         yGrids: { ...NUM_PARAMS, label: '纵向格数', defVal: 100, minVal: 10, maxVal: 10000 },
         gridSize: { ...NUM_PARAMS, label: '格子边长', defVal: 20, minVal: 1, maxVal: 100, suffix: 'px' },
-        clearGrids: { ...BTN_PARAMS, label: '清空' }
+        clearGrids: { ...BTN_PARAMS, label: '清空', tips: '快捷键：Ctrl+D' }
       },
       {
-        algorithm: { ...SELECT_PARAMS, label: '算法类型', options: ALGORITHMS },
+        algorithm: {
+          ...SELECT_PARAMS,
+          label: '算法类型',
+          tips: [
+            'A*寻路为目前最流行的启发式广度搜索寻路算法，从起点开始依次检测周围节点并加入开启列表，然后每次从开启列表中取出优先级（按启发函数进行评估）最高的点继续展开，直到展开到终点为止',
+            '优先级的计算公式为：f = g + h',
+            '其中，f表示优先级，g表示已经过的路径长度，h表示启发值',
+            '',
+            '根据启发函数的不同，A*算法又可分为以下几种：',
+            '1. 曼哈顿距离：启发值为当前点离终点的横纵向距离和，适用于只能上下左右移动的情况',
+            '2. 欧几里德距离：启发值为当前点离终点的直线距离',
+            '3. 八分角距离：启发值为当前点离终点的斜45°折线距离，适用于能对角线（即八方向）移动的情况',
+            '4. 切比雪夫距离：启发值为当前点离终点的横纵向距离中的较大值',
+            '',
+            '最短路径寻路（Dijkstra算法）可以看做是A*算法忽略启发值（即h=0）后的简化版本',
+            '',
+            '第三方A*为目前Github上star数最高的JS版A*算法代码（https://github.com/bgrins/javascript-astar），经过少量调整以支持异步演示功能'
+          ],
+          options: ALGORITHMS
+        },
         heapSort: { ...TOGGLE_PARAMS, label: '采用二叉堆排序', tips: '路径长时可显著提升性能' },
-        diagonalMove: { ...SELECT_PARAMS, label: '对角移动', options: DIAGONAL_MOVES }
+        diagonalMove: {
+          ...SELECT_PARAMS,
+          label: '对角移动',
+          tips: DIAGONAL_MOVES.map(
+            i => `html ${i.label}：<br><img style="padding: 8px; background-color: #fff8" s src="${require('assets/diagonal_' + i.value + '.png')}">`
+          ),
+          options: DIAGONAL_MOVES
+        }
       },
       {
         showState: {
           ...TOGGLE_PARAMS,
           label: '寻路状态',
-          tips: '绿色为开启节点，青色为关闭节点，蓝色为路径节点',
+          tips: `html${B('■', '#64f064')}- 开启节点<br>${B('■', '#32c8c8')}- 关闭节点<br>${B('■', '#1e78be')}- 路径节点`,
           dynamicParams: () => ({ ctrlParams: { label: vm.showState ? '实时显示' : '不显示' } })
         },
         showDelay: {
@@ -70,14 +96,15 @@ export default {
         pointMode: {
           ...BTN_TOGGLE_PARAMS,
           label: '选起止点',
-          tips: POINT_MODES.map(i => `${i.value}-${i.name}`).join(' / '),
+          tips: POINT_MODES.map(i => `${i.value} - ${i.name}`),
           options: POINT_MODES,
           clearable: true
         },
-        clearPoints: { ...BTN_PARAMS, label: '清除' },
+        clearPoints: { ...BTN_PARAMS, label: '清除', tips: '快捷键：Esc' },
         autoFind: { ...TOGGLE_PARAMS, label: '自动寻路' },
         findPath: {
           ...BTN_PARAMS,
+          tips: '快捷键：F9',
           dynamicParams: () => ({
             label: !vm.findingPath ? '开始寻路' : vm.findPaused ? '继续寻路' : '暂停寻路',
             icon: !vm.findingPath || vm.findPaused ? 'play_arrow' : 'pause',
@@ -89,14 +116,14 @@ export default {
         brushMode: {
           ...BTN_TOGGLE_PARAMS,
           label: '笔刷模式',
-          tips: BRUSH_MODES.map(i => `${i.value}-${i.name}`).join(' / '),
+          tips: BRUSH_MODES.map(i => `${i.value} - ${i.name}`),
           options: BRUSH_MODES,
           clearable: true
         },
         brushType: {
           ...BTN_TOGGLE_PARAMS,
           label: '笔刷样式',
-          tips: BRUSH_TYPES.map(i => `${i.value}-${i.name}`).join(' / '),
+          tips: BRUSH_TYPES.map(i => `${i.value} - ${i.name}`),
           options: BRUSH_TYPES
         }
       },

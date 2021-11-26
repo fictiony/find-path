@@ -652,6 +652,9 @@ Vue.prototype.$getNested = getNested
 
 // 文本突显
 export function B (text, color = 'red') {
+  if (color.startsWith('#')) {
+    return ` <b style="color:${color}">${text}</b> `
+  }
   return ` <b class="text-${color}">${text}</b> `
 }
 

@@ -1,9 +1,6 @@
 <template>
   <q-btn ref="btn" :label="computedLabel" :icon="computedIcon" v-bind="$attrs" v-on="$listeners" @click="onClick">
-    <q-tooltip max-width="400px" anchor="top middle" self="bottom middle" v-if="tips">
-      <q-markdown :src="tips" v-if="mdTips" />
-      <template v-else>{{ tips }}</template>
-    </q-tooltip>
+    <CommonTips anchor="top middle" self="bottom middle" :tips="tips" v-if="tips" />
   </q-btn>
 </template>
 
@@ -11,16 +8,17 @@
 // 【通用表单按钮】
 import key from 'keymaster'
 import { exposeChildMethods } from 'boot/utils'
+import CommonTips from './CommonTips.vue'
 
 export default {
+  components: { CommonTips },
   inheritAttrs: false,
 
   props: {
     value: {}, // 关联数据
     label: [String, Function], // 按钮标签，为函数时格式为：关联数据 => 按钮标签
     icon: [String, Function], // 按钮图标，为函数时格式为：关联数据 => 按钮图标
-    tips: String, // 提示说明文字
-    mdTips: Boolean, // 提示是否采用Markdown格式
+    tips: [String, Array], // 提示说明文字
     shortcut: String, // 快捷键
     keyScope: {
       // 快捷键作用域

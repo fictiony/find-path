@@ -2,10 +2,7 @@
   <div class="row items-center narrow">
     <label class="q-mr-sm" :class="labelClass" :style="combineLabelStyle" v-if="label">
       {{ label }}
-      <q-tooltip max-width="400px" anchor="top left" self="top right" v-if="tips">
-        <q-markdown :src="tips" v-if="mdTips" />
-        <template v-else>{{ tips }}</template>
-      </q-tooltip>
+      <CommonTips :tips="tips" v-if="tips" />
     </label>
     <q-input
       ref="input"
@@ -27,8 +24,10 @@
 <script>
 // 【通用输入框】
 import { exposeChildProps, exposeChildMethods } from 'boot/utils'
+import CommonTips from './CommonTips.vue'
 
 export default {
+  components: { CommonTips },
   inheritAttrs: false,
 
   data: vm => ({
@@ -40,8 +39,7 @@ export default {
     labelClass: [String, Array, Object], // 左侧文字标签样式
     labelStyle: Object,
     labelWidth: Number, // 左侧文字标签宽度
-    tips: String, // 提示说明文字
-    mdTips: Boolean, // 提示是否采用Markdown格式
+    tips: [String, Array], // 提示说明文字
     qInputClass: [String, Array, Object], // 输入框组件样式
     qInputStyle: Object,
     width: {
