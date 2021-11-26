@@ -12,13 +12,59 @@ const PATH_COLOR = [30, 120, 190, 250] // 路径节点
 
 // 算法类型
 export const ALGORITHMS = Object.freeze([
-  { value: 'astar_h', label: 'A*寻路（曼哈顿距离）' },
-  { value: 'astar_e', label: 'A*寻路（欧几里德距离）' },
-  { value: 'astar_o', label: 'A*寻路（八分角距离）' },
-  { value: 'astar_c', label: 'A*寻路（切比雪夫距离）' },
-  { value: 'dijkstra', label: '最短路径寻路' },
-  { value: 'js_astar', label: '第三方A*（曼哈顿距离）' },
-  { value: 'js_astar_d', label: '第三方A*（八分角距离）' }
+  {
+    value: 'astar',
+    label: 'A*寻路',
+    tips: `目前最流行的启发式广度搜索寻路算法
+<br>从起点开始依次检测周围节点并加入开启列表，然后每次从开启列表中取出优先级（按启发函数进行评估）最高的点继续展开，直到展开到终点为止
+<br>优先级的计算公式为：f = g + h
+<br>其中，f表示优先级，g表示已经过的路径长度，h表示启发值`
+  },
+  {
+    value: 'bestfirst',
+    label: '最近优先寻路',
+    tips: `A*寻路算法的变种，区别只是提升了启发函数值在优先级计算中的权重
+（即：f = g + h * w），但可能会导致最终得到的不是最优解`
+  },
+  {
+    value: 'dijkstra',
+    label: '最短路径寻路',
+    tips: '又称Dijkstra算法，可以看做是A*算法忽略启发值（即h=0）后的简化版本'
+  },
+  {
+    value: 'js_astar',
+    label: '第三方A*寻路',
+    tips: `目前Github上star数最高的JS版A*算法代码
+<br>参考地址：https://github.com/bgrins/javascript-astar
+<br>启发函数不支持欧几里德距离和切比雪夫距离（改用曼哈顿距离）
+<br>对角移动不支持无阻挡可走和非全阻挡可走（改用始终可走）
+<br>注：代码经过少量调整，以便支持异步演示功能`
+  }
+])
+
+// 启发函数类型
+export const HEURISTICS = Object.freeze([
+  {
+    value: 'manhattan',
+    label: '曼哈顿距离',
+    tips: '启发值为当前点离终点的横纵向距离和，适用于只能上下左右移动的情况'
+  },
+  {
+    value: 'euclidean',
+    label: '欧几里德距离',
+    tips: '启发值为当前点离终点的直线距离'
+  },
+  {
+    value: 'octile',
+    label: '八分角距离',
+    tips:
+      '启发值为当前点离终点的斜45°折线距离，适用于能对角线（即八方向）移动的情况'
+  },
+  {
+    value: 'chebyshev',
+    label: '切比雪夫距离',
+    tips: '启发值为当前点离终点的横纵向距离中的较大值'
+  }
 ])
 
 // 对角线可走类型

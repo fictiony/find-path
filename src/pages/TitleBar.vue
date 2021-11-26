@@ -34,7 +34,7 @@
 import { mapState, mapGetters, mapActions } from 'vuex'
 import { mapStateRW } from 'boot/utils'
 import * as dlg from 'pages/dialog'
-import { ALGORITHMS, DIAGONAL_MOVES, POINT_MODES, BRUSH_MODES } from 'boot/draw'
+import { ALGORITHMS, HEURISTICS, DIAGONAL_MOVES, POINT_MODES, BRUSH_MODES } from 'boot/draw'
 import { Stats } from 'three-stats'
 import benchmark from 'src/core/benchmark'
 window.benchmark = benchmark
@@ -42,8 +42,9 @@ window.benchmark = benchmark
 // 浮动面板
 const FLOAT_PANELS = {
   toolPanel: ['工具栏', 'Ctrl+T'],
+  operatePanel: ['操作面板', 'Ctrl+O'],
   toolPanelFloat: ['工具栏浮动', 'Ctrl+Shift+T'],
-  operatePanel: ['操作面板', 'Ctrl+O']
+  operatePanelFloat: ['操作面板浮动', 'Ctrl+Shift+O']
 }
 
 export default {
@@ -58,23 +59,34 @@ export default {
     findPathMenu: [
       ...ALGORITHMS.map(i => {
         return {
-          label: i.label,
+          label: i.label + '算法',
           icon: () => (vm.algorithm === i.value ? 'done' : ''),
           handler: () => (vm.algorithm = i.value)
+        }
+      }),
+      null,
+      ...HEURISTICS.map(i => {
+        return {
+          label: i.label + '启发',
+          icon: () => (vm.heuristic === i.value ? 'done' : ''),
+          handler: () => (vm.heuristic = i.value),
+          disable: () => vm.algorithm === 'js_astar' && ['euclidean', 'chebyshev'].includes(i.value)
         }
       }),
       null,
       {
         label: '采用二叉堆排序',
         icon: () => (vm.heapSort ? 'done' : ''),
-        handler: () => (vm.heapSort = !vm.heapSort)
+        handler: () => (vm.heapSort = !vm.heapSort),
+        disable: () => vm.algorithm === 'js_astar'
       },
       null,
       ...DIAGONAL_MOVES.map(i => {
         return {
-          label: i.label,
+          label: i.label + '对角',
           icon: () => (vm.diagonalMove === i.value ? 'done' : ''),
-          handler: () => (vm.diagonalMove = i.value)
+          handler: () => (vm.diagonalMove = i.value),
+          disable: () => vm.algorithm === 'js_astar' && [1, 2].includes(i.value)
         }
       })
     ],
@@ -349,7 +361,8 @@ export default {
     ...mapStateRW('main', ['loading', 'darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom']),
     ...mapState('edit', ['findingPath', 'startPos', 'endPos']),
-    ...mapStateRW('edit', ['algorithm', 'heapSort', 'diagonalMove', 'showState', 'pointMode', 'autoFind', 'findPaused']),
+    ...mapStateRW('edit', ['algorithm', 'heuristic', 'heuristWeight', 'heapSort', 'diagonalMove']),
+    ...mapStateRW('edit', ['showState', 'pointMode', 'autoFind', 'findPaused']),
     ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir']),
     ...mapGetters('edit', ['gridStats'])
   },

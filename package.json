@@ -1,6 +1,6 @@
 {
   "name": "findpath",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "productName": "FInd Path Demo",
   "description": "寻路算法演示 - Path Finding Algorithm Demo",
   "author": "fictiony <fictiony@qq.com>",

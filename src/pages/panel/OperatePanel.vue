@@ -11,8 +11,8 @@
 // 【操作面板】
 import { mapState, mapActions } from 'vuex'
 import { mapStateRW, B } from 'boot/utils'
-import { ALGORITHMS, DIAGONAL_MOVES, POINT_MODES, BRUSH_MODES, BRUSH_TYPES } from 'boot/draw'
-import { QBtnToggle, QBadge, QSlider, QSelect, QToggle } from 'quasar'
+import { ALGORITHMS, HEURISTICS, DIAGONAL_MOVES, POINT_MODES, BRUSH_MODES, BRUSH_TYPES } from 'boot/draw'
+import { QBtnToggle, QBadge, QSlider, QSelect, QToggle, QBar } from 'quasar'
 
 // 表单控件固定参数
 const NUM_PARAMS = { t: 'num', standout: true, width: 80 }
@@ -32,48 +32,57 @@ const SELECT_PARAMS = {
 }
 const TOGGLE_PARAMS = { t: 'ctrl', component: QToggle, ctrlStyle: { marginTop: '6px', marginBottom: '6px' } }
 const BTN_PARAMS = { t: 'btn', class: 'q-my-xs q-px-xs', glossy: true }
+const BAR = { s: { t: QBar, class: 'q-space q-my-xs', style: 'height: 1px' } }
 
 export default {
   data: vm => ({
     // 操作表单
     form: [
       {
-        xGrids: { ...NUM_PARAMS, label: '横向格数', defVal: 100, minVal: 10, maxVal: 10000 },
-        yGrids: { ...NUM_PARAMS, label: '纵向格数', defVal: 100, minVal: 10, maxVal: 10000 },
-        gridSize: { ...NUM_PARAMS, label: '格子边长', defVal: 20, minVal: 1, maxVal: 100, suffix: 'px' },
+        xGrids: { ...NUM_PARAMS, label: '横向格数', tips: '取值范围：10~10000', defVal: 100, minVal: 10, maxVal: 10000 },
+        yGrids: { ...NUM_PARAMS, label: '纵向格数', tips: '取值范围：10~10000', defVal: 100, minVal: 10, maxVal: 10000 },
+        gridSize: { ...NUM_PARAMS, label: '格子边长', tips: '取值范围：1~100', defVal: 20, minVal: 1, maxVal: 100, suffix: 'px' },
         clearGrids: { ...BTN_PARAMS, label: '清空', tips: '快捷键：Ctrl+D' }
       },
+      BAR,
       {
         algorithm: {
           ...SELECT_PARAMS,
           label: '算法类型',
-          tips: [
-            'A*寻路为目前最流行的启发式广度搜索寻路算法，从起点开始依次检测周围节点并加入开启列表，然后每次从开启列表中取出优先级（按启发函数进行评估）最高的点继续展开，直到展开到终点为止',
-            '优先级的计算公式为：f = g + h',
-            '其中，f表示优先级，g表示已经过的路径长度，h表示启发值',
-            '',
-            '根据启发函数的不同，A*算法又可分为以下几种：',
-            '1. 曼哈顿距离：启发值为当前点离终点的横纵向距离和，适用于只能上下左右移动的情况',
-            '2. 欧几里德距离：启发值为当前点离终点的直线距离',
-            '3. 八分角距离：启发值为当前点离终点的斜45°折线距离，适用于能对角线（即八方向）移动的情况',
-            '4. 切比雪夫距离：启发值为当前点离终点的横纵向距离中的较大值',
-            '',
-            '最短路径寻路（Dijkstra算法）可以看做是A*算法忽略启发值（即h=0）后的简化版本',
-            '',
-            '第三方A*为目前Github上star数最高的JS版A*算法代码（https://github.com/bgrins/javascript-astar），经过少量调整以支持异步演示功能'
-          ],
+          tips: 'html ' + ALGORITHMS.map(i => `<b class="text-yellow">【${i.label}】</b><br>${i.tips}`).join('<br><br>'),
           options: ALGORITHMS
         },
-        heapSort: { ...TOGGLE_PARAMS, label: '采用二叉堆排序', tips: '路径长时可显著提升性能' },
+        heuristic: {
+          ...SELECT_PARAMS,
+          label: '启发函数',
+          tips: 'html ' + HEURISTICS.map(i => `<b class="text-yellow">${i.label}：</b>${i.tips}`).join('<br><br>'),
+          dynamicParams: () => ({ options: HEURISTICS.filter(i => !(vm.algorithm === 'js_astar' && ['euclidean', 'chebyshev'].includes(i.value))) })
+        },
+        heuristWeight: {
+          ...NUM_PARAMS,
+          label: '启发权重',
+          tips: ['启发函数值在优先级计算中的权重', '取值范围：0~10000，最大精度：0.01'],
+          minVal: 0,
+          maxVal: 10000,
+          precision: 2,
+          dynamicParams: () => ({ disable: vm.algorithm !== 'bestfirst' })
+        },
+        heapSort: {
+          ...TOGGLE_PARAMS,
+          label: '采用二叉堆排序',
+          tips: '路径长时可显著提升性能',
+          dynamicParams: () => ({ disable: vm.algorithm === 'js_astar' })
+        },
         diagonalMove: {
           ...SELECT_PARAMS,
           label: '对角移动',
           tips: DIAGONAL_MOVES.map(
             i => `html ${i.label}：<br><img style="padding: 8px; background-color: #fff8" s src="${require('assets/diagonal_' + i.value + '.png')}">`
           ),
-          options: DIAGONAL_MOVES
+          dynamicParams: () => ({ options: DIAGONAL_MOVES.filter(i => !(vm.algorithm === 'js_astar' && [1, 2].includes(i.value))) })
         }
       },
+      BAR,
       {
         showState: {
           ...TOGGLE_PARAMS,
@@ -84,7 +93,7 @@ export default {
         showDelay: {
           ...NUM_PARAMS,
           label: '显示延时',
-          tips: '每个寻路节点改变状态后要延迟显示的毫秒数（精度0.001）',
+          tips: ['每个寻路节点改变状态后要延迟显示的毫秒数', '取值范围：0~1000，最大精度：0.001'],
           minVal: 0,
           maxVal: 1000,
           precision: 3,
@@ -112,6 +121,7 @@ export default {
           })
         }
       },
+      BAR,
       {
         brushMode: {
           ...BTN_TOGGLE_PARAMS,
@@ -128,15 +138,15 @@ export default {
         }
       },
       {
-        brushSize: { ...SLIDER_PARAMS, label: '笔刷大小', min: 1, max: 200 },
+        brushSize: { ...SLIDER_PARAMS, label: '笔刷大小', tips: '取值范围：1~200', min: 1, max: 200 },
         brushSizeTip: { ...BADGE_PARAMS, dynamicParams: () => ({ label: vm.brushSize }) }
       },
       {
-        brushSoft: { ...SLIDER_PARAMS, label: '笔刷软度', tips: '即笔刷边缘障碍程度减弱的快慢' },
+        brushSoft: { ...SLIDER_PARAMS, label: '笔刷软度', tips: ['即笔刷边缘障碍程度减弱的快慢', '取值范围：0~100'] },
         brushSoftTip: { ...BADGE_PARAMS, dynamicParams: () => ({ label: vm.brushSoft }) }
       },
       {
-        brushState: { ...SLIDER_PARAMS, label: '障碍程度', tips: '>100表示绝对阻挡不可通过', min: 1, max: 200 },
+        brushState: { ...SLIDER_PARAMS, label: '障碍程度', tips: ['取值范围：1~200', '>100表示绝对阻挡不可通过'], min: 1, max: 200 },
         brushStateTip: { ...BADGE_PARAMS, dynamicParams: () => ({ label: vm.brushState }) }
       }
     ],
@@ -151,7 +161,8 @@ export default {
   computed: {
     ...mapState('edit', ['startPos', 'endPos']),
     ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'findingPath', 'pathDirty']),
-    ...mapStateRW('edit', ['algorithm', 'heapSort', 'diagonalMove', 'showState', 'showDelay', 'pointMode', 'autoFind', 'findPaused']),
+    ...mapStateRW('edit', ['algorithm', 'heuristic', 'heuristWeight', 'heapSort', 'diagonalMove']),
+    ...mapStateRW('edit', ['showState', 'showDelay', 'pointMode', 'autoFind', 'findPaused']),
     ...mapStateRW('edit', ['brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState'])
   },
 

@@ -11,6 +11,7 @@ import {
 } from 'boot/utils'
 import PathNode from 'src/core/PathNode'
 import AStarPathFinder from 'src/core/AStarPathFinder'
+import BestFirstPathFinder from 'src/core/BestFirstPathFinder'
 import DijkstraPathFinder from 'src/core/DijkstraPathFinder'
 import { astar, Graph } from 'src/core/javascript-astar'
 
@@ -99,16 +100,19 @@ const state = () => ({
   pathStates: new Map(), // 路径状态表：{ 格子ID: 状态值 }，状态值可为：1~100-不同刷新次数的开启节点/101~200-不同刷新次数的关闭节点/201路径节点/其他-无
   pathDirty: null, // 路径脏区域（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
 
-  algorithm: 'astar_h', // 当前算法类型：
-  // astar_h - A*寻路（曼哈顿距离）
-  // astar_e - A*寻路（欧几里德距离）
-  // astar_o - A*寻路（八分角距离）
-  // astar_c - A*寻路（切比雪夫距离）
+  algorithm: 'astar', // 当前算法类型：
+  // astar - A*寻路
+  // bestfirst - 最近优先寻路
   // dijkstra - 最短路径寻路
-  // js_astar - 第三方A*（曼哈顿距离）
-  // js_astar_d - 第三方A*（八分角距离）
+  // js_astar - 第三方A*寻路
+  heuristic: 'manhattan', // 当前算法使用的启发函数类型：
+  // manhattan - 曼哈顿距离
+  // euclidean - 欧几里德距离
+  // octile - 八分角距离
+  // chebyshev - 切比雪夫距离
+  heuristWeight: 10000, // 当前算法使用的启发值权重
   heapSort: true, // 是否使用二叉堆排序寻路节点优先级
-  diagonalMove: 2, // 是否可走对角线：0-不可走/1-无阻挡可走/2-非全阻挡可走/3-始终可走
+  diagonalMove: 0, // 是否可走对角线：0-不可走/1-无阻挡可走/2-非全阻挡可走/3-始终可走
   showState: false, // 寻路时是否显示实时状态（即节点开启关闭状态）
   showDelay: 0, // 显示每个寻路实时状态的延时时间（毫秒）
   pointMode: 0, // 起止点模式：1-指定起点/2-指定终点/null-无，pointMode优先级高于brushMode
@@ -259,34 +263,27 @@ const getters = {
     }
 
     // 创建算法对象
-    const { algorithm, heapSort, diagonalMove } = state
     const options = {
-      diagonalMove,
-      heapSort
+      diagonalMove: state.diagonalMove,
+      heuristic: state.heuristic,
+      heuristWeight: state.heuristWeight,
+      heapSort: state.heapSort
     }
-    switch (algorithm) {
-      case 'astar_h':
-        options.heuristic = 'manhattan'
+    switch (state.algorithm) {
+      case 'astar':
         return new AStarPathFinder(genNode, options)
-      case 'astar_e':
-        options.heuristic = 'euclidean'
-        return new AStarPathFinder(genNode, options)
-      case 'astar_o':
-        options.heuristic = 'octile'
-        return new AStarPathFinder(genNode, options)
-      case 'astar_c':
-        options.heuristic = 'chebyshev'
-        return new AStarPathFinder(genNode, options)
+      case 'bestfirst':
+        return new BestFirstPathFinder(genNode, options)
       case 'dijkstra':
         return new DijkstraPathFinder(genNode, options)
       case 'js_astar':
-      case 'js_astar_d':
         return {
           graph: new Graph(getters.graphGrids, {
-            diagonal: diagonalMove === 3
+            diagonal: state.diagonalMove !== 0 // 不支持模式1和2，都视作3
           }),
           heuristic:
-            algorithm === 'js_astar_d' ? astar.heuristics.diagonal : null,
+            // 不支持欧几里德距离和切比雪夫距离，都视作曼哈顿距离
+            state.heuristic === 'octile' ? astar.heuristics.diagonal : null,
           getNodeAt (x, y) {
             const row = this.graph.grid[x]
             if (!row) return
@@ -319,6 +316,8 @@ const mutations = {
     'pathStates',
     'pathDirty',
     'algorithm',
+    'heuristic',
+    'heuristWeight',
     'heapSort',
     'diagonalMove',
     'showState',
