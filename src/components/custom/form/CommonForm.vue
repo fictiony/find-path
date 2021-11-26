@@ -2,38 +2,42 @@
   <div class="column q-gutter-y-sm">
     <template v-if="form instanceof Array">
       <template v-for="(row, index) in form">
-        <div :key="index" class="row" :class="row.$class || rowClass" :style="row.$style || rowStyle" v-if="row">
-          <template v-for="(def, field) in row">
-            <component
-              :key="field"
-              :ref="field"
-              :is="getInput(def.t || inputParams.t)"
-              :value="value[field]"
-              :auto-save="autoSave"
-              v-bind="getCombineParams(def)"
-              v-on="itemListeners"
-              @input="onInput(def, field, $event)"
-              v-if="field !== '$class' && field !== '$style'"
-            />
-          </template>
-        </div>
-        <q-separator :key="index" v-else />
+        <template v-if="!isHiddenField('$' + index)">
+          <div :key="index" class="row" :class="row.$class || rowClass" :style="row.$style || rowStyle" v-if="row">
+            <template v-for="(def, field) in row">
+              <component
+                :key="field"
+                :ref="field"
+                :is="getInput(def.t || inputParams.t)"
+                :value="value[field]"
+                :auto-save="autoSave"
+                v-bind="getCombineParams(def)"
+                v-on="itemListeners"
+                @input="onInput(def, field, $event)"
+                v-if="field !== '$class' && field !== '$style' && !isHiddenField(field)"
+              />
+            </template>
+          </div>
+          <q-separator :key="index" v-bind="separatorParams" v-else />
+        </template>
       </template>
     </template>
     <template v-else>
       <template v-for="(def, field) in form">
-        <component
-          :key="field"
-          :ref="field"
-          :is="getInput(def.t || inputParams.t)"
-          :value="value[field]"
-          :auto-save="autoSave"
-          v-bind="getCombineParams(def)"
-          v-on="itemListeners"
-          @input="onInput(def, field, $event)"
-          v-if="def"
-        />
-        <q-separator :key="field" v-else />
+        <template v-if="!isHiddenField(field)">
+          <component
+            :key="field"
+            :ref="field"
+            :is="getInput(def.t || inputParams.t)"
+            :value="value[field]"
+            :auto-save="autoSave"
+            v-bind="getCombineParams(def)"
+            v-on="itemListeners"
+            @input="onInput(def, field, $event)"
+            v-if="def"
+          />
+          <q-separator :key="field" v-bind="separatorParams" v-else />
+        </template>
       </template>
     </template>
   </div>
@@ -48,7 +52,7 @@ export default {
     form: {
       // 表单定义，格式为：{ 字段名: { t: 输入框类型（参见INPUT）, dynamicParams: 动态参数表获取函数（若指定，则需返回动态参数表）,
       // onInput: 输入事件处理函数（参数为：输入值, 输入框组件）, ...输入框组件参数 }, ...其他字段 }
-      // 为Array时每项为一个表单定义，且占据一行，且每项表单定义中名为$class和$style的字段改为用于定制该行的样式，而不按常规字段处理
+      // 为Array时每项为一个子表单定义，且占据一行，且每项子表单定义中名为$class和$style的字段改为用于定制该行的样式，而不按常规字段处理
       type: [Object, Array],
       required: true
     },
@@ -62,13 +66,19 @@ export default {
       type: Object,
       default: () => ({})
     },
+    hiddenFields: [Array, Object], // 要隐藏的字段名列表或映射表（{ 字段名: 是否隐藏 }），空表示无，当form为Array时可用字段名$n表示隐藏第n行
     autoSave: Boolean, // 是否自动保存表单输入值（即无需添加input事件来更新输入值到表单数据字段中）
     rowClass: {
       // 行样式（当form为Array时起效）
       type: [String, Array, Object],
       default: 'q-gutter-x-md'
     },
-    rowStyle: [String, Array, Object]
+    rowStyle: [String, Array, Object],
+    separatorParams: {
+      // 分割线参数表
+      type: Object,
+      default: () => ({})
+    }
   },
 
   computed: {
@@ -98,6 +108,15 @@ export default {
     getCombineParams(def) {
       const dynamicParams = def.dynamicParams ? def.dynamicParams() : null
       return { ...this.inputParams, ...def, ...dynamicParams, inputParams: { ...this.inputParams, ...def.inputParams } }
+    },
+
+    // 判断字段是否隐藏
+    isHiddenField(field) {
+      if (!this.hiddenFields) return false
+      if (this.hiddenFields instanceof Array) {
+        return this.hiddenFields.includes(field)
+      }
+      return !!this.hiddenFields[field]
     },
 
     // 矫正嵌套输入字段名和值

@@ -1,7 +1,15 @@
 <template>
   <FloatPanel title="操作面板" state="operatePanel" :style="{ backgroundColor: $q.dark.isActive ? '#0006' : '#fff6' }">
     <q-scroll-area class="fit column q-px-sm q-py-xs">
-      <CommonForm class="_form q-pa-sm" :form="form" :value="_self" auto-save :input-params="inputParams" @input="onInput" />
+      <CommonForm
+        class="_form q-pa-sm"
+        :form="form"
+        :value="_self"
+        auto-save
+        :input-params="inputParams"
+        :hidden-fields="hiddenFields"
+        @input="onInput"
+      />
       <BrushPattern class="q-mx-sm q-pa-xs float-left" style="background-color: #8881; border: 1px solid #8888; border-radius: 4px" />
     </q-scroll-area>
   </FloatPanel>
@@ -12,7 +20,7 @@
 import { mapState, mapActions } from 'vuex'
 import { mapStateRW, B } from 'boot/utils'
 import { ALGORITHMS, HEURISTICS, DIAGONAL_MOVES, POINT_MODES, BRUSH_MODES, BRUSH_TYPES } from 'boot/draw'
-import { QBtnToggle, QBadge, QSlider, QSelect, QToggle, QBar } from 'quasar'
+import { QBtnToggle, QBadge, QSlider, QSelect, QToggle } from 'quasar'
 
 // 表单控件固定参数
 const NUM_PARAMS = { t: 'num', standout: true, width: 80 }
@@ -32,7 +40,6 @@ const SELECT_PARAMS = {
 }
 const TOGGLE_PARAMS = { t: 'ctrl', component: QToggle, ctrlStyle: { marginTop: '6px', marginBottom: '6px' } }
 const BTN_PARAMS = { t: 'btn', class: 'q-my-xs q-px-xs', glossy: true }
-const BAR = { s: { t: QBar, class: 'q-space q-my-xs', style: 'height: 1px' } }
 
 export default {
   data: vm => ({
@@ -44,7 +51,7 @@ export default {
         gridSize: { ...NUM_PARAMS, label: '格子边长', tips: '取值范围：1~100', defVal: 20, minVal: 1, maxVal: 100, suffix: 'px' },
         clearGrids: { ...BTN_PARAMS, label: '清空', tips: '快捷键：Ctrl+D' }
       },
-      BAR,
+      null,
       {
         algorithm: {
           ...SELECT_PARAMS,
@@ -64,14 +71,12 @@ export default {
           tips: ['启发函数值在优先级计算中的权重', '取值范围：0~10000，最大精度：0.01'],
           minVal: 0,
           maxVal: 10000,
-          precision: 2,
-          dynamicParams: () => ({ disable: vm.algorithm !== 'bestfirst' })
+          precision: 2
         },
         heapSort: {
           ...TOGGLE_PARAMS,
           label: '采用二叉堆排序',
-          tips: '路径长时可显著提升性能',
-          dynamicParams: () => ({ disable: vm.algorithm === 'js_astar' })
+          tips: '路径长时可显著提升性能'
         },
         diagonalMove: {
           ...SELECT_PARAMS,
@@ -82,7 +87,7 @@ export default {
           dynamicParams: () => ({ options: DIAGONAL_MOVES.filter(i => !(vm.algorithm === 'js_astar' && [1, 2].includes(i.value))) })
         }
       },
-      BAR,
+      null,
       {
         showState: {
           ...TOGGLE_PARAMS,
@@ -97,8 +102,7 @@ export default {
           minVal: 0,
           maxVal: 1000,
           precision: 3,
-          suffix: 'ms',
-          dynamicParams: () => ({ disable: !vm.showState })
+          suffix: 'ms'
         }
       },
       {
@@ -121,7 +125,7 @@ export default {
           })
         }
       },
-      BAR,
+      null,
       {
         brushMode: {
           ...BTN_TOGGLE_PARAMS,
@@ -163,7 +167,17 @@ export default {
     ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'findingPath', 'pathDirty']),
     ...mapStateRW('edit', ['algorithm', 'heuristic', 'heuristWeight', 'heapSort', 'diagonalMove']),
     ...mapStateRW('edit', ['showState', 'showDelay', 'pointMode', 'autoFind', 'findPaused']),
-    ...mapStateRW('edit', ['brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState'])
+    ...mapStateRW('edit', ['brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState']),
+
+    // 要隐藏的字段
+    hiddenFields() {
+      return {
+        heuristic: this.algorithm === 'dijkstra',
+        heuristWeight: this.algorithm !== 'bestfirst',
+        heapSort: this.algorithm === 'js_astar',
+        showDelay: !this.showState
+      }
+    }
   },
 
   methods: {

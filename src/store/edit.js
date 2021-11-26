@@ -113,7 +113,7 @@ const state = () => ({
   heuristWeight: 10000, // 当前算法使用的启发值权重
   heapSort: true, // 是否使用二叉堆排序寻路节点优先级
   diagonalMove: 0, // 是否可走对角线：0-不可走/1-无阻挡可走/2-非全阻挡可走/3-始终可走
-  showState: false, // 寻路时是否显示实时状态（即节点开启关闭状态）
+  showState: true, // 寻路时是否显示实时状态（即节点开启关闭状态）
   showDelay: 0, // 显示每个寻路实时状态的延时时间（毫秒）
   pointMode: 0, // 起止点模式：1-指定起点/2-指定终点/null-无，pointMode优先级高于brushMode
   startPos: null, // 当前寻路起点坐标：{x, y}
