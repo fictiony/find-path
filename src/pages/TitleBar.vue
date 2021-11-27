@@ -70,7 +70,8 @@ export default {
           label: i.label + '启发',
           icon: () => (vm.heuristic === i.value ? 'done' : ''),
           handler: () => (vm.heuristic = i.value),
-          disable: () => vm.algorithm === 'js_astar' && ['euclidean', 'chebyshev'].includes(i.value)
+          disable: () =>
+            ['dijkstra', 'breadthfirst'].includes(vm.algorithm) || (vm.algorithm === 'js_astar' && ['euclidean', 'chebyshev'].includes(i.value))
         }
       }),
       null,
@@ -78,7 +79,7 @@ export default {
         label: '采用二叉堆排序',
         icon: () => (vm.heapSort ? 'done' : ''),
         handler: () => (vm.heapSort = !vm.heapSort),
-        disable: () => vm.algorithm === 'js_astar'
+        disable: () => ['breadthfirst', 'js_astar'].includes(vm.algorithm)
       },
       null,
       ...DIAGONAL_MOVES.map(i => {

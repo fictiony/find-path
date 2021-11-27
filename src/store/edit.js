@@ -13,6 +13,7 @@ import PathNode from 'src/core/PathNode'
 import AStarPathFinder from 'src/core/AStarPathFinder'
 import BestFirstPathFinder from 'src/core/BestFirstPathFinder'
 import DijkstraPathFinder from 'src/core/DijkstraPathFinder'
+import BreadthFirstPathFinder from 'src/core/BreadthFirstPathFinder'
 import { astar, Graph } from 'src/core/javascript-astar'
 
 // ----------------------------------------------------------------------------【utils】
@@ -263,19 +264,15 @@ const getters = {
     }
 
     // 创建算法对象
-    const options = {
-      diagonalMove: state.diagonalMove,
-      heuristic: state.heuristic,
-      heuristWeight: state.heuristWeight,
-      heapSort: state.heapSort
-    }
     switch (state.algorithm) {
       case 'astar':
-        return new AStarPathFinder(genNode, options)
+        return new AStarPathFinder(genNode, state)
       case 'bestfirst':
-        return new BestFirstPathFinder(genNode, options)
+        return new BestFirstPathFinder(genNode, state)
       case 'dijkstra':
-        return new DijkstraPathFinder(genNode, options)
+        return new DijkstraPathFinder(genNode, state)
+      case 'breadthfirst':
+        return new BreadthFirstPathFinder(genNode, state)
       case 'js_astar':
         return {
           graph: new Graph(getters.graphGrids, {
@@ -640,7 +637,7 @@ const actions = {
               `，更新${B(updateCount)}次，关闭${B(closeCount)}次`
         }`,
         'info',
-        { timeout: 5000, closeBtn: true }
+        { timeout: 60000, closeBtn: true }
       )
     }
   }

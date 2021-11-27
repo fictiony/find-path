@@ -66,6 +66,8 @@ export default class DijkstraPathFinder extends BasePathFinder {
         n.parentId = node.id
         n.distance = distance
         n.priority = this.calcPriority(n)
+
+        // 若已开启，则更新在列表中的顺序，否则加入开启列表
         if (isOpen) {
           openNodes.update(n)
           if (updateNotify && (await updateNotify(n, 2))) return null

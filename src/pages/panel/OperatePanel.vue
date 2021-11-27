@@ -172,9 +172,9 @@ export default {
     // 要隐藏的字段
     hiddenFields() {
       return {
-        heuristic: this.algorithm === 'dijkstra',
+        heuristic: ['dijkstra', 'breadthfirst'].includes(this.algorithm),
         heuristWeight: this.algorithm !== 'bestfirst',
-        heapSort: this.algorithm === 'js_astar',
+        heapSort: ['breadthfirst', 'js_astar'].includes(this.algorithm),
         showDelay: !this.showState
       }
     }
