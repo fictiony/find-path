@@ -14,6 +14,7 @@ import AStarPathFinder from 'src/core/AStarPathFinder'
 import BestFirstPathFinder from 'src/core/BestFirstPathFinder'
 import DijkstraPathFinder from 'src/core/DijkstraPathFinder'
 import BreadthFirstPathFinder from 'src/core/BreadthFirstPathFinder'
+import TestPathFinder from 'src/core/TestPathFinder'
 import { astar, Graph } from 'src/core/javascript-astar'
 
 // ----------------------------------------------------------------------------【utils】
@@ -273,6 +274,8 @@ const getters = {
         return new DijkstraPathFinder(genNode, state)
       case 'breadthfirst':
         return new BreadthFirstPathFinder(genNode, state)
+      case 'test':
+        return new TestPathFinder(genNode, state)
       case 'js_astar':
         return {
           graph: new Graph(getters.graphGrids, {

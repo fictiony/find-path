@@ -23,12 +23,14 @@ export const ALGORITHMS = Object.freeze([
   {
     value: 'bestfirst',
     label: '最近优先寻路',
-    tips: 'A*寻路算法的变种，区别只是提升了启发函数值在优先级计算中的权重（即：f = g + h * w），但可能会导致最终得到的不是最优解'
+    tips:
+      'A*寻路算法的变种，区别只是提升了启发函数值在优先级计算中的权重（即：f = g + h * w），但可能会导致最终得到的不是最优解'
   },
   {
     value: 'dijkstra',
     label: '最短路径寻路',
-    tips: '又称Dijkstra算法，可以看做是A*算法忽略启发值（即h=0）后的简化版本，是在A*算法出现前的经典算法'
+    tips:
+      '又称Dijkstra算法，可以看做是A*算法忽略启发值（即h=0）后的简化版本，是在A*算法出现前的经典算法'
   },
   {
     value: 'breadthfirst',
@@ -44,6 +46,11 @@ export const ALGORITHMS = Object.freeze([
 <br>启发函数不支持欧几里德距离和切比雪夫距离（改用曼哈顿距离）
 <br>对角移动不支持无阻挡可走和非全阻挡可走（改用始终可走）
 <br>注：代码经过少量调整，以便支持异步演示功能`
+  },
+  {
+    value: 'test',
+    label: '测试寻路',
+    tips: '个人研究测试中的寻路算法'
   }
 ])
 

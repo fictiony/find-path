@@ -1,8 +1,8 @@
 import PathNode from './PathNode'
 import AStarPathFinder from './AStarPathFinder'
-import { astar as astar2, Graph } from './javascript-astar' // most popular implementation of astar for compare
+import TestPathFinder from './TestPathFinder'
 
-export default async function benchmark (
+export default async function test (
   times = 100, // run times
   size = 1000, // edge length of the square map
   ratio = 0.2, // ratio of the block grids
@@ -14,24 +14,18 @@ export default async function benchmark (
 
   // prepare map and path finder
   const nodes = new Map()
-  const grids = []
   for (let x = 0; x < size; x++) {
-    const row = (grids[x] = [])
     for (let y = 0; y < size; y++) {
-      row[y] = 0
       if (Math.random() < ratio) continue
-      row[y] = 1
       nodes.set(PathNode.xyToId(x, y), new PathNode(x, y))
     }
   }
-  const graph = new Graph(grids, { diagonal })
-  const astar = new AStarPathFinder(id => nodes.get(id), {
+  const options = {
     diagonalMove: diagonal ? 3 : 0,
     heuristic: diagonal ? 'octile' : 'manhattan'
-  })
-  const options2 = {
-    heuristic: astar2.heuristics[diagonal ? 'diagonal' : 'manhattan']
   }
+  const astar = new AStarPathFinder(id => nodes.get(id), options)
+  const tester = new TestPathFinder(id => nodes.get(id), options)
   const stats = {
     open: 0,
     update: 0,
@@ -44,35 +38,37 @@ export default async function benchmark (
     astar.openNotify = () => !++stats.open
     astar.updateNotify = () => !++stats.update
     astar.closeNotify = () => !++stats.close
-    options2.openNotify = () => !++stats.open2
-    options2.updateNotify = () => !++stats.update2
-    options2.closeNotify = () => !++stats.close2
+    tester.openNotify = () => !++stats.open2
+    tester.updateNotify = () => !++stats.update2
+    tester.closeNotify = () => !++stats.close2
   }
 
   // run tests
   const results = []
-  let start, end, start2, end2, path, path2
+  let start, end, path, path2
   for (let i = 0; i < times; i++) {
     do start = astar.getNodeAt(rand(), rand())
     while (!start)
     do end = astar.getNodeAt(rand(), rand())
     while (!end)
-    start2 = graph.grid[start.x][start.y]
-    end2 = graph.grid[end.x][end.y]
     Object.keys(stats).forEach(i => (stats[i] = 0))
 
     // to avoid performance difference caused by the execution order, execute them alternately
     const beginTime = now()
     if (i % 2) {
-      path2 = await astar2.search(graph, start2, end2, options2)
+      path2 = await tester.findPath(start, end)
+      astar.findPathVer++
     } else {
       path = await astar.findPath(start, end)
+      tester.findPathVer++
     }
     const endTime = now()
     if (i % 2) {
       path = await astar.findPath(start, end)
+      tester.findPathVer++
     } else {
-      path2 = await astar2.search(graph, start2, end2, options2)
+      path2 = await tester.findPath(start, end)
+      astar.findPathVer++
     }
     const endTime2 = now()
 
@@ -102,7 +98,7 @@ export default async function benchmark (
       )
       console.log(
         path2
-          ? `Others found path with ${path2.length} steps`
+          ? `Tester found path with ${path2.length - 1} steps`
           : 'Found no path',
         showStats ? `(${open2} + ${update2} + ${close2})` : '',
         `in ${time2.toFixed(2)} ms.`
@@ -112,7 +108,7 @@ export default async function benchmark (
   console.log(
     `Run ${times} times,`,
     `took ${(totalTime / times).toFixed(2)} ms in average.`,
-    `Others took ${(totalTime2 / times).toFixed(2)} ms in average.`
+    `Tester took ${(totalTime2 / times).toFixed(2)} ms in average.`
   )
 
   return results

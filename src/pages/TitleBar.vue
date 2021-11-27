@@ -346,6 +346,16 @@ export default {
                 console.log('【笔刷】\n', vm.$store.getters['edit/brushStates'].slice())
                 console.log('【全图】\n', vm.$store.state.edit.gridStates.entries())
               }
+            },
+            {
+              label: '测试',
+              handler: async () => {
+                const test = require('src/core/test').default
+                vm.loading = '正在测试中... 请稍候'
+                await vm.$sleep(100)
+                await test()
+                vm.loading = false
+              }
             }
           ]
         : []),
