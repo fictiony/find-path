@@ -39,12 +39,19 @@ export default class DijkstraPathFinder extends BasePathFinder {
   // 寻路（重载）
   async findPath (startNode, targetNode) {
     this.reset(true)
-    startNode.reset()
     const ver = ++this.findPathVer
 
-    // 从起始节点开始搜索
-    const { openNodes, openNotify, updateNotify, closeNotify } = this
-    for (let node = startNode; node; node = openNodes.pop()) {
+    // 将起始节点加入开启列表
+    const { openNodes, openNotify } = this
+    startNode.reset()
+    startNode.openVer = ver
+    openNodes.push(startNode)
+    if (openNotify && (await openNotify(startNode, 1))) return null
+
+    // 开始搜索
+    const { updateNotify, closeNotify } = this
+    let node
+    while ((node = openNodes.pop())) {
       node.closeVer = ver
       if (closeNotify && (await closeNotify(node, 0))) return null
 
@@ -72,8 +79,8 @@ export default class DijkstraPathFinder extends BasePathFinder {
           openNodes.update(n)
           if (updateNotify && (await updateNotify(n, 2))) return null
         } else {
-          openNodes.push(n)
           n.openVer = ver
+          openNodes.push(n)
           if (openNotify && (await openNotify(n, 1))) return null
         }
       }

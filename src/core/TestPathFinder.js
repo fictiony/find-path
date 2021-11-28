@@ -1,26 +1,22 @@
 // 【测试寻路算法】
 // - 个人研究测试中的寻路算法
 
-import AStarPathFinder from './AStarPathFinder'
+import DualDijkstraPathFinder from './DualDijkstraPathFinder'
 
-export default class TestPathFinder extends AStarPathFinder {
-  // 寻路（重载）
-  async findPath (startNode, targetNode) {
-    const { x, y } = targetNode
-    const { heuristic } = this
-    this.calcHeurist = node => {
-      return heuristic(Math.abs(node.x - x), Math.abs(node.y - y))
-    }
-    return await super.findPath(startNode, targetNode)
-  }
-
-  // 计算节点优先级（重载）
-  // calcPriority (node) {
-  //   return super.calcPriority(node)
+export default class TestPathFinder extends DualDijkstraPathFinder {
+  // 计算节点启发函数值（重载）
+  // calcHeurist (node) {
+  //   const { x, y } = this.targetNode
+  //   const dx = Math.abs(node.x - x)
+  //   const dy = Math.abs(node.y - y)
+  //   node.bias = Math.abs(dx - dy)
+  //   return this.heuristic(dx, dy)
   // }
 
-  // 计算节点启发函数值（可重载）
-  calcHeurist (node) {
-    console.log(123)
-  }
+  // 节点优先级比较（重载）
+  // comparePriority (nodeA, nodeB) {
+  //   return (
+  //     super.comparePriority(nodeA, nodeB) || nodeA.bias - nodeB.bias
+  //   )
+  // }
 }
