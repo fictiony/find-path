@@ -1,26 +1,38 @@
-# Find Path Demo (findpath)
+# 寻路算法演示 （Find Path Demo）
 
-Path Finding Algorithm Demo
+![](https://img.shields.io/badge/find--path-0.4.0-orange) ![](https://img.shields.io/badge/quasar-1.16.0-blue) ![](https://img.shields.io/badge/Email-fictiony@qq.com-green)
 
-## Install the dependencies
+这是一个功能强大，且很有意思的寻路算法的演示程序。
+您可以在里面自由绘制各种大小和障碍形式的地图，并对比观看各种寻路算法的搜索过程。
+
+演示中包含了众多常见的寻路算法，如：
+
+- A*寻路（AStar）
+- 最短路径寻路（Dijkstra）
+- 最近优先寻路（Best-First）
+- 广度优先寻路（Breadth-First）
+
+等等，并且还有多项搜索参数可以设置。
+
+在线演示地址：[Live Demo](https://test.o666o.com/findpath/)
+
+![](./preview.png)
+
+有兴趣讨论寻路算法的，欢迎加我QQ交流：12501566
+
+## 用法 （Usage）
+
 ```bash
+# 安装依赖 Install the dependencies
 yarn
-```
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
-```bash
+# 测试运行 Start the app in development mode
 quasar dev
-```
 
-### Lint the files
-```bash
-yarn run lint
-```
-
-### Build the app for production
-```bash
+# 发布 Build the app for production
 quasar build
 ```
 
-### Customize the configuration
-See [Configuring quasar.conf.js](https://v1.quasar.dev/quasar-cli/quasar-conf-js).
+## 授权 （License）
+
+[MIT](http://en.wikipedia.org/wiki/MIT_License) (c) 2021 Fictiony Chen <fictiony@qq.com>
