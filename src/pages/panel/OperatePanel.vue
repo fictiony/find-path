@@ -73,9 +73,19 @@ export default {
           maxVal: 10000,
           precision: 2
         },
+        dualSearch: {
+          ...TOGGLE_PARAMS,
+          label: '双向搜索',
+          tips: [
+            '从起点和终点同步进行路径搜索，直到两边交会后将路径进行合并',
+            '',
+            '当地图较大且障碍结构复杂时，双向搜索比单向搜索可减少大约一半的展开节点数量，从而提高寻路效率',
+            '但由于增加了逻辑复杂度，因此在地图较小或障碍结构简单时，效率反而不如单向搜索'
+          ]
+        },
         heapSort: {
           ...TOGGLE_PARAMS,
-          label: '采用二叉堆排序',
+          label: '二叉堆排序',
           tips: '路径长时可显著提升性能'
         },
         diagonalMove: {
@@ -165,7 +175,7 @@ export default {
   computed: {
     ...mapState('edit', ['startPos', 'endPos']),
     ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'findingPath', 'pathDirty']),
-    ...mapStateRW('edit', ['algorithm', 'heuristic', 'heuristWeight', 'heapSort', 'diagonalMove']),
+    ...mapStateRW('edit', ['algorithm', 'heuristic', 'heuristWeight', 'dualSearch', 'heapSort', 'diagonalMove']),
     ...mapStateRW('edit', ['showState', 'showDelay', 'pointMode', 'autoFind', 'findPaused']),
     ...mapStateRW('edit', ['brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState']),
 
@@ -174,6 +184,7 @@ export default {
       return {
         heuristic: ['dijkstra', 'breadthfirst'].includes(this.algorithm),
         heuristWeight: this.algorithm !== 'bestfirst',
+        dualSearch: ['breadthfirst', 'js_astar'].includes(this.algorithm),
         heapSort: ['breadthfirst', 'js_astar'].includes(this.algorithm),
         showDelay: !this.showState
       }

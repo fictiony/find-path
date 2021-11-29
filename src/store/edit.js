@@ -11,9 +11,12 @@ import {
 } from 'boot/utils'
 import PathNode from 'src/core/PathNode'
 import AStarPathFinder from 'src/core/AStarPathFinder'
-import BestFirstPathFinder from 'src/core/BestFirstPathFinder'
 import DijkstraPathFinder from 'src/core/DijkstraPathFinder'
+import BestFirstPathFinder from 'src/core/BestFirstPathFinder'
 import BreadthFirstPathFinder from 'src/core/BreadthFirstPathFinder'
+import DualAStarPathFinder from 'src/core/DualAStarPathFinder'
+import DualDijkstraPathFinder from 'src/core/DualDijkstraPathFinder'
+import DualBestFirstPathFinder from 'src/core/DualBestFirstPathFinder'
 import TestPathFinder from 'src/core/TestPathFinder'
 import { astar, Graph } from 'src/core/javascript-astar'
 
@@ -29,7 +32,7 @@ let delaySum = 0 // 累积延时时间（毫秒）
 
 // 寻路状态通知函数
 // - @node 节点
-// - @type 通知类型
+// - @type 通知类型：0-关闭/1-开启/2-更新
 async function findPathNotify (node, type) {
   const { pathStates, pathDirty, showState, showDelay } = fpCtx.state
   const newDirty =
@@ -39,18 +42,19 @@ async function findPathNotify (node, type) {
   const id = node.id == null ? PathNode.xyToId(node.x, node.y) : node.id
   let state = pathStates.get(id) || 0
   switch (type) {
-    case 0:
+    case 0: // 关闭
       closeCount++
-      state = (state || 1) + 100
+      state = (state % 100 || 1) + 100
       break
-    case 1:
+    case 1: // 开启
       openCount++
-      state = 1
+      state = state % 100 || 1
       break
-    case 2:
+    case 2: // 更新
       updateCount++
-      if (state++ % 100) break
-      return // 最多加到100
+      if (state >= 100) return // 最多加到100
+      state++
+      break
   }
   pathStates.set(id, state)
 
@@ -104,8 +108,9 @@ const state = () => ({
 
   algorithm: 'astar', // 当前算法类型：
   // astar - A*寻路
-  // bestfirst - 最近优先寻路
   // dijkstra - 最短路径寻路
+  // bestfirst - 最近优先寻路
+  // breadthfirst - 广度优先寻路
   // js_astar - 第三方A*寻路
   heuristic: 'manhattan', // 当前算法使用的启发函数类型：
   // manhattan - 曼哈顿距离
@@ -113,7 +118,8 @@ const state = () => ({
   // octile - 八分角距离
   // chebyshev - 切比雪夫距离
   heuristWeight: 10000, // 当前算法使用的启发值权重
-  heapSort: true, // 是否使用二叉堆排序寻路节点优先级
+  dualSearch: false, // 是否采用首尾双向同步搜索
+  heapSort: true, // 是否采用二叉堆排序寻路节点优先级
   diagonalMove: 0, // 是否可走对角线：0-不可走/1-无阻挡可走/2-非全阻挡可走/3-始终可走
   showState: true, // 寻路时是否显示实时状态（即节点开启关闭状态）
   showDelay: 0, // 显示每个寻路实时状态的延时时间（毫秒）
@@ -265,13 +271,20 @@ const getters = {
     }
 
     // 创建算法对象
-    switch (state.algorithm) {
+    const { algorithm, dualSearch } = state
+    switch (algorithm) {
       case 'astar':
-        return new AStarPathFinder(genNode, state)
-      case 'bestfirst':
-        return new BestFirstPathFinder(genNode, state)
+        return dualSearch
+          ? new DualAStarPathFinder(genNode, state)
+          : new AStarPathFinder(genNode, state)
       case 'dijkstra':
-        return new DijkstraPathFinder(genNode, state)
+        return dualSearch
+          ? new DualDijkstraPathFinder(genNode, state)
+          : new DijkstraPathFinder(genNode, state)
+      case 'bestfirst':
+        return dualSearch
+          ? new DualBestFirstPathFinder(genNode, state)
+          : new BestFirstPathFinder(genNode, state)
       case 'breadthfirst':
         return new BreadthFirstPathFinder(genNode, state)
       case 'test':
@@ -318,6 +331,7 @@ const mutations = {
     'algorithm',
     'heuristic',
     'heuristWeight',
+    'dualSearch',
     'heapSort',
     'diagonalMove',
     'showState',

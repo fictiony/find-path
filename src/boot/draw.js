@@ -21,16 +21,16 @@ export const ALGORITHMS = Object.freeze([
 <br>其中，f表示优先级，g表示已经过的路径长度，h表示启发值`
   },
   {
-    value: 'bestfirst',
-    label: '最近优先寻路',
-    tips:
-      'A*寻路算法的变种，区别只是提升了启发函数值在优先级计算中的权重（即：f = g + h * w），但可能会导致最终得到的不是最优解'
-  },
-  {
     value: 'dijkstra',
     label: '最短路径寻路',
     tips:
       '又称Dijkstra算法，可以看做是A*算法忽略启发值（即h=0）后的简化版本，是在A*算法出现前的经典算法'
+  },
+  {
+    value: 'bestfirst',
+    label: '最近优先寻路',
+    tips:
+      'A*寻路算法的变种，区别只是提升了启发函数值在优先级计算中的权重（即：f = g + h * w），但可能会导致最终得到的不是最优解'
   },
   {
     value: 'breadthfirst',

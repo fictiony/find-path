@@ -1,5 +1,5 @@
 // 【最短路径寻路算法】
-// - 从起始节点出发，采用广度搜索，依次检测周围的节点，并加入开启列表（按优先级排序，路径越短越优先）
+// - 从起始节点出发，采用广度搜索，依次检测周围的节点，并加入开启列表（按优先级排序，路径越短越优先，相同时开启越早越优先）
 // - 每次从开启列表中取出最优先的节点，继续展开周围的新节点，并加入开启列表，当前节点则标记为关闭
 // - 重复上述过程，直到展开到目标节点为止
 
@@ -40,11 +40,13 @@ export default class DijkstraPathFinder extends BasePathFinder {
   async findPath (startNode, targetNode) {
     this.reset(true)
     const ver = ++this.findPathVer
+    let openIndex = 0
 
     // 将起始节点加入开启列表
     const { openNodes, openNotify } = this
     startNode.reset()
     startNode.openVer = ver
+    startNode.openIndex = ++openIndex
     openNodes.push(startNode)
     if (openNotify && (await openNotify(startNode, 1))) return null
 
@@ -75,6 +77,7 @@ export default class DijkstraPathFinder extends BasePathFinder {
         n.priority = this.calcPriority(n)
 
         // 若已开启，则更新在列表中的顺序，否则加入开启列表
+        n.openIndex = ++openIndex
         if (isOpen) {
           openNodes.update(n)
           if (updateNotify && (await updateNotify(n, 2))) return null
@@ -96,6 +99,6 @@ export default class DijkstraPathFinder extends BasePathFinder {
 
   // 节点优先级比较（可重载）
   comparePriority (nodeA, nodeB) {
-    return nodeA.priority - nodeB.priority
+    return nodeA.priority - nodeB.priority || nodeA.openIndex - nodeB.openIndex
   }
 }

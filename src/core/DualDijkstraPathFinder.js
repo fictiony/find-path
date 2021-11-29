@@ -6,6 +6,8 @@ import SortedNodes from './SortedNodes'
 
 export default class DualDijkstraPathFinder extends DijkstraPathFinder {
   endOpenNodes = null // 终点开启节点有序列表
+  side = 1 // 当前寻路搜索端：1-起点端/2-终点端
+  dualNode = null // 当前寻路的对向搜索节点
 
   // 构造函数
   constructor (genNode, options) {
@@ -26,34 +28,37 @@ export default class DualDijkstraPathFinder extends DijkstraPathFinder {
   async findPath (startNode, targetNode) {
     this.reset(true)
     const ver = ++this.findPathVer
+    let openIndex = 0
 
     // 将起始和目标节点加入开启列表
     const { openNodes, endOpenNodes, openNotify } = this
     startNode.reset()
     startNode.openVer = ver
     startNode.openSide = 1
+    startNode.openIndex = ++openIndex
     openNodes.push(startNode)
     if (openNotify && (await openNotify(startNode, 1))) return null
     targetNode.reset()
     targetNode.openVer = ver
     targetNode.openSide = 2
+    targetNode.openIndex = ++openIndex
     endOpenNodes.push(targetNode)
     if (openNotify && (await openNotify(targetNode, 1))) return null
 
     // 开始搜索
     const { updateNotify, closeNotify } = this
-    let side = (this.side = 1) // 当前搜索端：1-起点端/2-终点端
+    let side = (this.side = 1)
     let sideOpenNodes = openNodes
     let node
-    let dualNode = targetNode
+    let dualNode = (this.dualNode = targetNode)
     while ((node = sideOpenNodes.pop())) {
       // 若当前节点优先级比对向节点低，则交换搜索端
       if (this.comparePriority(node, dualNode) > 0) {
         side = this.side = 3 - side
         sideOpenNodes = side === 1 ? openNodes : endOpenNodes
-        const tmp = node
-        node = dualNode
-        dualNode = tmp
+        dualNode = node
+        node = this.dualNode
+        this.dualNode = dualNode
       }
 
       // 关闭节点
@@ -98,13 +103,14 @@ export default class DualDijkstraPathFinder extends DijkstraPathFinder {
         n.priority = this.calcPriority(n)
 
         // 若已开启，则更新在列表中的顺序，否则加入开启列表
+        n.openIndex = ++openIndex
         if (isOpen) {
           sideOpenNodes.update(n)
           if (updateNotify && (await updateNotify(n, 2))) return null
         } else {
-          sideOpenNodes.push(n)
           n.openVer = ver
           n.openSide = side
+          sideOpenNodes.push(n)
           if (openNotify && (await openNotify(n, 1))) return null
         }
       }

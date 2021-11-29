@@ -1,9 +1,9 @@
 // 【测试寻路算法】
 // - 个人研究测试中的寻路算法
 
-import DualDijkstraPathFinder from './DualDijkstraPathFinder'
+import DualAStarPathFinder from './DualAStarPathFinder'
 
-export default class TestPathFinder extends DualDijkstraPathFinder {
+export default class TestPathFinder extends DualAStarPathFinder {
   // 计算节点启发函数值（重载）
   // calcHeurist (node) {
   //   const { x, y } = this.targetNode
