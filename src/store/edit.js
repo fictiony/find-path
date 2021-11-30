@@ -483,7 +483,6 @@ const actions = {
   async clearPath ({ state, commit, dispatch }, forceReset) {
     await dispatch('clearStates', ['pathStates', 'pathDirty', forceReset])
     if (state.findingPath) {
-      commit('findingPath', false)
       commit('findPathId', state.findPathId + 1)
     }
   },
@@ -579,6 +578,7 @@ const actions = {
 
     // 清除当前寻路状态
     await dispatch('clearPath')
+    while (state.findingPath) await sleep(100) // 若当前正在寻路，则等待其结束（否则会出现冲突）
     const id = state.findPathId + 1
     commit('findPathId', id)
     let tm, path
@@ -620,8 +620,8 @@ const actions = {
       pf.updateNotify = null
       pf.closeNotify = null
     }
-    if (id !== state.findPathId || pf !== getters.pathFinder) return // 中途取消
     commit('findingPath', false)
+    if (id !== state.findPathId || pf !== getters.pathFinder) return // 中途取消
 
     // 显示路径
     if (path) {
