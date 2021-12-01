@@ -112,7 +112,7 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
     this.reset(true)
     const ver = ++this.findPathVer
     let openIndex = 0
-    this.curLayer = 0
+    this.curLayer = -1
     this.targetNode = targetNode
 
     // 将起始节点加入开启列表
@@ -150,16 +150,16 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
 
         // 若相邻节点已开启且路径更短，则忽略
         const isOpen = n.openVer === ver
-        const distance = node.distance + node.neighbors.get(n.id)
+        const distance =
+          node.distance + (layer > 0 ? 0 : node.neighbors.get(n.id)) // 对于大格相邻节点的距离尚未知
         if (isOpen && n.distance <= distance) continue
 
         // 更新相邻节点状态
         n.parentId = node.id
         n.distance = distance
-        n.priority = this.calcPriority(n)
-        if (layer > 0) {
-          n.priority += node.neighborsCache.get(layer).get(n.id)
-        }
+        n.priority =
+          this.calcPriority(n) +
+          (layer === 0 ? 0 : node.neighborsCache.get(layer).get(n.id)) // 对于大格还要叠加相邻节点的启发值
 
         // 若已开启，则更新在列表中的顺序，否则加入开启列表
         n.openIndex = ++openIndex
