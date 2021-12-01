@@ -12,6 +12,8 @@ export default class PathNode {
   // openVer = 0 // 开启状态版本号（与寻路版本号相同时表示节点已开启）
   // closeVer = 0 // 关闭状态版本号（与寻路版本号相同时表示节点已关闭）
   // openIndex = 0 // 开启序号（用于优先级排序）
+  // parentCache = null // 父节点缓存（需用Map）：{ 对应起点ID: 父节点ID }
+  // neighborsCache = null // 相邻节点表分层缓存（需用Map）：{ 层级: { 节点ID: 启发函数值 } }
   // 注：不初始化上述属性，可在一定程度上节省内存消耗
 
   // 构造函数
@@ -27,6 +29,41 @@ export default class PathNode {
     this.parentId = null
     this.distance = 0
     this.priority = 0
+  }
+
+  // 缓存父节点
+  // - @startId 对应起点ID
+  // - @parentId 父节点ID
+  cacheParent (startId, parentId) {
+    this.parentCache ||= new Map()
+    this.parentCache.set(startId, parentId)
+    this.parentId = startId
+  }
+
+  // 判断是否有缓存路径
+  hasCachePath () {
+    return this.parentCache
+      ? this.parentCache.has(this.parentId)
+      : this.parentId == null
+  }
+
+  // 获取缓存父节点ID
+  getCacheParentId () {
+    return this.parentCache && this.parentCache.get(this.parentId)
+  }
+
+  // 缓存相邻节点表
+  // - @layer 层级
+  // - @neighbors 相邻节点表（需用Map）：{ 节点ID: 启发函数值 }
+  cacheNeighbors (layer, neighbors) {
+    this.neighborsCache ||= new Map()
+    this.neighborsCache.set(layer, neighbors)
+  }
+
+  // 获取缓存相邻节点表
+  // - @layer 层级
+  getCacheNeighbors (layer) {
+    return this.neighborsCache && this.neighborsCache.get(layer)
   }
 
   // 节点坐标转ID

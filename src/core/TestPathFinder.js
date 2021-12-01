@@ -1,9 +1,9 @@
 // 【测试寻路算法】
 // - 个人研究测试中的寻路算法
 
-import DualAStarPathFinder from './DualAStarPathFinder'
+import P2HAStarPathFinder from './P2HAStarPathFinder'
 
-export default class TestPathFinder extends DualAStarPathFinder {
+export default class TestPathFinder extends P2HAStarPathFinder {
   // 计算节点启发函数值（重载）
   // calcHeurist (node) {
   //   const { x, y } = this.targetNode
@@ -13,10 +13,8 @@ export default class TestPathFinder extends DualAStarPathFinder {
   //   return this.heuristic(dx, dy)
   // }
 
-  // 节点优先级比较（重载）
-  // comparePriority (nodeA, nodeB) {
-  //   return (
-  //     super.comparePriority(nodeA, nodeB) || nodeA.bias - nodeB.bias
-  //   )
+  // 计算节点启发函数值（重载）
+  // calcHeurist (node) {
+  //   return super.calcHeurist(node) ** 2 / node.distance
   // }
 }

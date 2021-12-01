@@ -47,11 +47,15 @@ export const ALGORITHMS = Object.freeze([
 <br>对角移动不支持无阻挡可走和非全阻挡可走（改用始终可走）
 <br>注：代码经过少量调整，以便支持异步演示功能`
   },
-  {
-    value: 'test',
-    label: '测试寻路',
-    tips: '个人研究测试中的寻路算法'
-  }
+  ...(process.env.DEBUGGING
+    ? [
+        {
+          value: 'test',
+          label: '测试寻路',
+          tips: '个人研究测试中的寻路算法'
+        }
+      ]
+    : [])
 ])
 
 // 启发函数类型
