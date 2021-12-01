@@ -44,7 +44,7 @@ async function findPathNotify (node, type) {
   switch (type) {
     case 0: // 关闭
       closeCount++
-      state = (state % 100 || 1) + 100
+      state = 100 + (state % 100 || 1)
       break
     case 1: // 开启
       openCount++
@@ -52,7 +52,7 @@ async function findPathNotify (node, type) {
       break
     case 2: // 更新
       updateCount++
-      if (state >= 100) return // 最多加到100
+      if (state % 100 >= 99) return // 最多加到99
       state++
       break
   }
@@ -103,7 +103,7 @@ const state = () => ({
   gridDirty: null, // 格子脏区域（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
   findPathId: 0, // 当前寻路标识（每次递增1）
   findingPath: false, // 当前是否正在寻路中
-  pathStates: new Map(), // 路径状态表：{ 格子ID: 状态值 }，状态值可为：1~100-不同刷新次数的开启节点/101~200-不同刷新次数的关闭节点/201路径节点/其他-无
+  pathStates: new Map(), // 路径状态表：{ 格子ID: 状态值 }，状态值可为：1~99-开启节点/101~199-关闭节点/201~299-路径节点/其他-无，个十位表示刷新次数
   pathDirty: null, // 路径脏区域（Map对象）：{ 格子ID: true }，null表示无，特殊值'all'表示全脏
 
   algorithm: 'astar', // 当前算法类型：
@@ -628,7 +628,7 @@ const actions = {
       const { pathStates, pathDirty } = state
       const newDirty = pathDirty === 'all' ? null : pathDirty || new Map()
       path.forEach(node => {
-        pathStates.set(node.id, 201)
+        pathStates.set(node.id, 200 + (pathStates.get(node.id) || 1) % 100)
         newDirty && newDirty.set(node.id, true)
       })
       if (newDirty && newDirty !== pathDirty) {

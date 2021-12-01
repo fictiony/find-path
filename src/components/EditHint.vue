@@ -25,7 +25,7 @@ export default {
         const cost = state > 100 ? '∞' : Math.exp(state / 20).toFixed(2)
         parts.push(`🅱️ ${state} = ${cost}`)
         state = this.pathStates.get(id)
-        state && parts.push(`🔀 ${state} ${state > 200 ? '路径' : state > 100 ? '关闭' : '开启'}`)
+        state && parts.push(`🔀 ${state > 200 ? '路' : state > 100 ? '关' : '开'}${state % 100 > 1 ? ' +' + ((state % 100) - 1) : ''}`)
       }
       return parts.join('　')
     }

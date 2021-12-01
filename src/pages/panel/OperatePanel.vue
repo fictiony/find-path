@@ -102,7 +102,9 @@ export default {
         showState: {
           ...TOGGLE_PARAMS,
           label: '寻路状态',
-          tips: `html${B('■', '#64f064')}- 开启节点<br>${B('■', '#32c8c8')}- 关闭节点<br>${B('■', '#1e78be')}- 路径节点`,
+          tips: `html${B('■', '#64f064')}- 开启节点（越暗代表更新越多次）
+<br>${B('■', '#32c8c8')}- 关闭节点（越暗代表更新越多次）
+<br>${B('■', '#1e78be')}- 路径节点`,
           dynamicParams: () => ({ ctrlParams: { label: vm.showState ? '实时显示' : '不显示' } })
         },
         showDelay: {
