@@ -1,9 +1,9 @@
 // 【双向最近优先寻路算法】
 // - 从起点和终点同步开始进行最近优先寻路，直到两边的关闭节点相会
 
-import DualAStarPathFinder from './DualAStarPathFinder'
+import BiAStarPathFinder from './BiAStarPathFinder'
 
-export default class DualBestFirstPathFinder extends DualAStarPathFinder {
+export default class BiBestFirstPathFinder extends BiAStarPathFinder {
   heuristWeight = 1 // 启发值权重
 
   // 构造函数

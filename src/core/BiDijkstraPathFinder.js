@@ -4,10 +4,10 @@
 import DijkstraPathFinder from './DijkstraPathFinder'
 import SortedNodes from './SortedNodes'
 
-export default class DualDijkstraPathFinder extends DijkstraPathFinder {
+export default class BiDijkstraPathFinder extends DijkstraPathFinder {
   endOpenNodes = null // 终点开启节点有序列表
   side = 1 // 当前寻路搜索端：1-起点端/2-终点端
-  dualNode = null // 当前寻路的对向搜索节点
+  oppoNode = null // 当前寻路的对向搜索节点
 
   // 构造函数
   constructor (genNode, options) {
@@ -50,15 +50,15 @@ export default class DualDijkstraPathFinder extends DijkstraPathFinder {
     let side = (this.side = 1)
     let sideOpenNodes = openNodes
     let node
-    let dualNode = (this.dualNode = targetNode)
+    let oppoNode = (this.oppoNode = targetNode)
     while ((node = sideOpenNodes.pop())) {
       // 若当前节点优先级比对向节点低，则交换搜索端
-      if (this.comparePriority(node, dualNode) > 0) {
+      if (this.comparePriority(node, oppoNode) > 0) {
         side = this.side = 3 - side
         sideOpenNodes = side === 1 ? openNodes : endOpenNodes
-        dualNode = node
-        node = this.dualNode
-        this.dualNode = dualNode
+        oppoNode = node
+        node = this.oppoNode
+        this.oppoNode = oppoNode
       }
 
       // 关闭节点

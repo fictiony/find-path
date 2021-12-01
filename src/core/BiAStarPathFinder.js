@@ -1,10 +1,10 @@
 // 【双向A*寻路算法】
 // - 从起点和终点同步开始进行A*寻路，直到两边的关闭节点相会
 
-import DualDijkstraPathFinder from './DualDijkstraPathFinder'
+import BiDijkstraPathFinder from './BiDijkstraPathFinder'
 import AStarPathFinder from './AStarPathFinder'
 
-export default class DualAStarPathFinder extends DualDijkstraPathFinder {
+export default class BiAStarPathFinder extends BiDijkstraPathFinder {
   heuristic = null // 启发函数，格式为：(dx, dy) => 启发函数值，其中dx,dy为当前节点距离目标节点的横纵向距离
   startNode = null // 当前寻路的起始节点（启发函数要用到）
   targetNode = null // 当前寻路的目标节点（启发函数要用到）

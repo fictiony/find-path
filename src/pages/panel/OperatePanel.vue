@@ -73,7 +73,7 @@ export default {
           maxVal: 10000,
           precision: 2
         },
-        dualSearch: {
+        bidirectional: {
           ...TOGGLE_PARAMS,
           label: '双向搜索',
           tips: [
@@ -175,7 +175,7 @@ export default {
   computed: {
     ...mapState('edit', ['startPos', 'endPos']),
     ...mapStateRW('edit', ['xGrids', 'yGrids', 'gridSize', 'findingPath', 'pathDirty']),
-    ...mapStateRW('edit', ['algorithm', 'heuristic', 'heuristWeight', 'dualSearch', 'heapSort', 'diagonalMove']),
+    ...mapStateRW('edit', ['algorithm', 'heuristic', 'heuristWeight', 'bidirectional', 'heapSort', 'diagonalMove']),
     ...mapStateRW('edit', ['showState', 'showDelay', 'pointMode', 'autoFind', 'findPaused']),
     ...mapStateRW('edit', ['brushMode', 'brushType', 'brushSize', 'brushSoft', 'brushState']),
 
@@ -184,7 +184,7 @@ export default {
       return {
         heuristic: ['dijkstra', 'breadthfirst'].includes(this.algorithm),
         heuristWeight: this.algorithm !== 'bestfirst',
-        dualSearch: ['breadthfirst', 'js_astar'].includes(this.algorithm),
+        bidirectional: ['breadthfirst', 'js_astar'].includes(this.algorithm),
         heapSort: ['breadthfirst', 'js_astar'].includes(this.algorithm),
         showDelay: !this.showState
       }

@@ -14,9 +14,9 @@ import AStarPathFinder from 'src/core/AStarPathFinder'
 import DijkstraPathFinder from 'src/core/DijkstraPathFinder'
 import BestFirstPathFinder from 'src/core/BestFirstPathFinder'
 import BreadthFirstPathFinder from 'src/core/BreadthFirstPathFinder'
-import DualAStarPathFinder from 'src/core/DualAStarPathFinder'
-import DualDijkstraPathFinder from 'src/core/DualDijkstraPathFinder'
-import DualBestFirstPathFinder from 'src/core/DualBestFirstPathFinder'
+import BiAStarPathFinder from 'src/core/BiAStarPathFinder'
+import BiDijkstraPathFinder from 'src/core/BiDijkstraPathFinder'
+import BiBestFirstPathFinder from 'src/core/BiBestFirstPathFinder'
 import TestPathFinder from 'src/core/TestPathFinder'
 import { astar, Graph } from 'src/core/javascript-astar'
 
@@ -118,7 +118,7 @@ const state = () => ({
   // octile - 八分角距离
   // chebyshev - 切比雪夫距离
   heuristWeight: 10000, // 当前算法使用的启发值权重
-  dualSearch: false, // 是否采用首尾双向同步搜索
+  bidirectional: false, // 是否采用首尾双向同步搜索
   heapSort: true, // 是否采用二叉堆排序寻路节点优先级
   diagonalMove: 0, // 是否可走对角线：0-不可走/1-无阻挡可走/2-非全阻挡可走/3-始终可走
   showState: true, // 寻路时是否显示实时状态（即节点开启关闭状态）
@@ -271,19 +271,19 @@ const getters = {
     }
 
     // 创建算法对象
-    const { algorithm, dualSearch } = state
+    const { algorithm, bidirectional } = state
     switch (algorithm) {
       case 'astar':
-        return dualSearch
-          ? new DualAStarPathFinder(genNode, state)
+        return bidirectional
+          ? new BiAStarPathFinder(genNode, state)
           : new AStarPathFinder(genNode, state)
       case 'dijkstra':
-        return dualSearch
-          ? new DualDijkstraPathFinder(genNode, state)
+        return bidirectional
+          ? new BiDijkstraPathFinder(genNode, state)
           : new DijkstraPathFinder(genNode, state)
       case 'bestfirst':
-        return dualSearch
-          ? new DualBestFirstPathFinder(genNode, state)
+        return bidirectional
+          ? new BiBestFirstPathFinder(genNode, state)
           : new BestFirstPathFinder(genNode, state)
       case 'breadthfirst':
         return new BreadthFirstPathFinder(genNode, state)
@@ -331,7 +331,7 @@ const mutations = {
     'algorithm',
     'heuristic',
     'heuristWeight',
-    'dualSearch',
+    'bidirectional',
     'heapSort',
     'diagonalMove',
     'showState',

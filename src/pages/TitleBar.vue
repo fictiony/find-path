@@ -77,8 +77,8 @@ export default {
       null,
       {
         label: '采用双向搜索',
-        icon: () => (vm.dualSearch ? 'done' : ''),
-        handler: () => (vm.dualSearch = !vm.dualSearch),
+        icon: () => (vm.bidirectional ? 'done' : ''),
+        handler: () => (vm.bidirectional = !vm.bidirectional),
         disable: () => ['breadthfirst', 'js_astar'].includes(vm.algorithm)
       },
       {
@@ -378,7 +378,7 @@ export default {
     ...mapStateRW('main', ['loading', 'darkTheme', ...Object.keys(FLOAT_PANELS).filter(i => FLOAT_PANELS[i])]),
     ...mapGetters('main', ['maxViewZoom', 'minViewZoom', 'maxUIZoom', 'minUIZoom']),
     ...mapState('edit', ['findingPath', 'startPos', 'endPos']),
-    ...mapStateRW('edit', ['algorithm', 'heuristic', 'heuristWeight', 'dualSearch', 'heapSort', 'diagonalMove']),
+    ...mapStateRW('edit', ['algorithm', 'heuristic', 'heuristWeight', 'bidirectional', 'heapSort', 'diagonalMove']),
     ...mapStateRW('edit', ['showState', 'pointMode', 'autoFind', 'findPaused']),
     ...mapStateRW('edit', ['brushMode', 'brushSize', 'brushSoft', 'brushState', 'lockBrushDir']),
     ...mapGetters('edit', ['gridStats'])
