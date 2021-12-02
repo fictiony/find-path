@@ -43,13 +43,13 @@ export default class BreadthFirstPathFinder extends BasePathFinder {
     startNode.reset()
     startNode.openVer = ver
     openNodes.push(startNode)
-    if (openNotify && (await openNotify(startNode, 1))) return null
+    if (openNotify && (await openNotify(startNode, 1))) return
 
     // 开始搜索
     const { closeNotify } = this
     let node
     while ((node = openNodes[++this.closeIndex])) {
-      if (closeNotify && (await closeNotify(node, 0))) return null
+      if (closeNotify && (await closeNotify(node, 0))) return
 
       // 到达目标点则结束寻路
       if (node === targetNode) {
@@ -67,7 +67,7 @@ export default class BreadthFirstPathFinder extends BasePathFinder {
         // 加入开启队列
         n.openVer = ver
         openNodes.push(n)
-        if (openNotify && (await openNotify(n, 1))) return null
+        if (openNotify && (await openNotify(n, 1))) return
       }
     }
 

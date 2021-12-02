@@ -37,13 +37,13 @@ export default class BiDijkstraPathFinder extends DijkstraPathFinder {
     startNode.openSide = 1
     startNode.openIndex = ++openIndex
     openNodes.push(startNode)
-    if (openNotify && (await openNotify(startNode, 1))) return null
+    if (openNotify && (await openNotify(startNode, 1))) return
     targetNode.reset()
     targetNode.openVer = ver
     targetNode.openSide = 2
     targetNode.openIndex = ++openIndex
     endOpenNodes.push(targetNode)
-    if (openNotify && (await openNotify(targetNode, 1))) return null
+    if (openNotify && (await openNotify(targetNode, 1))) return
 
     // 开始搜索
     const { updateNotify, closeNotify } = this
@@ -69,7 +69,7 @@ export default class BiDijkstraPathFinder extends DijkstraPathFinder {
         node.closeSide = side
         node.closeInfo = null
       }
-      if (closeNotify && (await closeNotify(node, 0))) return null
+      if (closeNotify && (await closeNotify(node, 0))) return
 
       // 若两端均关闭，则表示路径已闭合，可返回结果
       if (node.closeSide === 3) {
@@ -106,12 +106,12 @@ export default class BiDijkstraPathFinder extends DijkstraPathFinder {
         n.openIndex = ++openIndex
         if (isOpen) {
           sideOpenNodes.update(n)
-          if (updateNotify && (await updateNotify(n, 2))) return null
+          if (updateNotify && (await updateNotify(n, 2))) return
         } else {
           n.openVer = ver
           n.openSide = side
           sideOpenNodes.push(n)
-          if (openNotify && (await openNotify(n, 1))) return null
+          if (openNotify && (await openNotify(n, 1))) return
         }
       }
     }

@@ -48,14 +48,14 @@ export default class DijkstraPathFinder extends BasePathFinder {
     startNode.openVer = ver
     startNode.openIndex = ++openIndex
     openNodes.push(startNode)
-    if (openNotify && (await openNotify(startNode, 1))) return null
+    if (openNotify && (await openNotify(startNode, 1))) return
 
     // 开始搜索
     const { updateNotify, closeNotify } = this
     let node
     while ((node = openNodes.pop())) {
       node.closeVer = ver
-      if (closeNotify && (await closeNotify(node, 0))) return null
+      if (closeNotify && (await closeNotify(node, 0))) return
 
       // 到达目标点则结束寻路
       if (node === targetNode) {
@@ -80,11 +80,11 @@ export default class DijkstraPathFinder extends BasePathFinder {
         n.openIndex = ++openIndex
         if (isOpen) {
           openNodes.update(n)
-          if (updateNotify && (await updateNotify(n, 2))) return null
+          if (updateNotify && (await updateNotify(n, 2))) return
         } else {
           n.openVer = ver
           openNodes.push(n)
-          if (openNotify && (await openNotify(n, 1))) return null
+          if (openNotify && (await openNotify(n, 1))) return
         }
       }
     }

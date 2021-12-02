@@ -56,7 +56,7 @@ const astar = {
 
       // Normal case -- move currentNode from open to closed, process each of its neighbors.
       currentNode.closed = true
-      if (closeNotify && (await closeNotify(currentNode, 0))) return null
+      if (closeNotify && (await closeNotify(currentNode, 0))) return
 
       // Find all neighbors for the current node.
       const neighbors = graph.neighbors(currentNode)
@@ -96,11 +96,11 @@ const astar = {
           if (!beenVisited) {
             // Pushing to heap will put it in proper place based on the 'f' value.
             openHeap.push(neighbor)
-            if (openNotify && (await openNotify(neighbor, 1))) return null
+            if (openNotify && (await openNotify(neighbor, 1))) return
           } else {
             // Already seen the node, but since it has been rescored we need to reorder it in the heap
             openHeap.rescoreElement(neighbor)
-            if (updateNotify && (await updateNotify(neighbor, 2))) return null
+            if (updateNotify && (await updateNotify(neighbor, 2))) return
           }
         }
       }

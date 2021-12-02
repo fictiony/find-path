@@ -103,7 +103,7 @@ export default class BasePathFinder {
   // 寻路（需重载）
   // - @startNode 起始节点
   // - @targetNode 目标节点
-  // - @return 若找到路径，则返回路径节点列表（含起始节点），否则返回null
+  // - @return 若找到路径，则返回路径节点列表（含起始节点），否则返回null，取消时返回undefined
   async findPath (startNode, targetNode) {
     ++this.findPathVer
     throw new Error('请重载findPath方法')
