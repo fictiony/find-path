@@ -115,7 +115,7 @@ export default class BasePathFinder {
   backtrace (node) {
     const path = [node]
     while (node.parentId != null) {
-      node = this.nodes.get(node.parentId)
+      node = this.getNode(node.parentId)
       if (!node) break
       path.push(node)
     }

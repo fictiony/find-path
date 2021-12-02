@@ -15,8 +15,9 @@ export default class PathNode {
   // openIndex = 0 // 开启序号（用于优先级排序）
   // closeSide = 0 // 关闭的搜索端 ——仅用于双向寻路算法
   // closeInfo = null // 关闭的信息 ——仅用于双向寻路算法
-  // pathCache = null // 路径缓存（需用Map）：{ 起点ID: [前一节点ID, 路径长度]（或null，表示无路径） }  ——仅用于P2HAStar算法
   // neighborsCache = null // 相邻节点表分层缓存（需用Map）：{ 层级: { 节点ID: 启发函数值 } }  ——仅用于P2HAStar算法
+  // pathCache = null // 路径缓存（需用Map）：{ 起点ID: [前一节点ID, 路径长度]（或null，表示无路径） }  ——仅用于P2HAStar算法
+  // hasCachePath = false // 节点是否已有缓存路径  ——仅用于P2HAStar算法
   // layer = 0 // 节点所在搜索层级  ——仅用于P2HAStar算法
   // 注：不初始化上述属性，可在一定程度上节省内存消耗，而且部分属性是只有个别寻路算法才用的到
 
@@ -42,31 +43,31 @@ export default class PathNode {
 
   // 缓存路径
   // - @startId 起点ID
-  // - @lastId 前一节点ID（null表示无路径）
-  // - @distance 路径长度
-  cachePath (startId, lastId = null, distance = 0) {
+  // - @lastId 前一节点ID
+  // - @distance 路径长度（空表示无路径）
+  cachePath (startId, lastId, distance) {
     this.pathCache ||= new Map()
-    this.pathCache.set(startId, lastId && [lastId, distance])
+    this.pathCache.set(startId, distance == null ? null : [lastId, distance])
   }
 
   // 判断是否有路径缓存（以当前父节点为起点，无父节点或缓存为无路径也返回true）
-  hasCachePath () {
-    if (this.parentId == null) return true
-    return this.pathCache ? this.pathCache.has(this.parentId) : false
-  }
-
-  // 获取缓存路径的前一节点ID（以当前父节点为起点）
-  // - @return 前一节点ID（null表示无路径，undefined表示无缓存）
-  // getCachePathLastId () {
-  //   const cache = this.pathCache && this.pathCache.get(this.parentId)
-  //   return cache && cache[0]
+  // hasCachePath () {
+  //   if (this.parentId == null) return true
+  //   return this.pathCache ? this.pathCache.has(this.parentId) : false
   // }
 
-  // 获取缓存路径的长度（以当前父节点为起点）
+  // 获取缓存路径的长度
+  // - @startId 起点ID（默认取父节点ID）
   // - @return 路径长度（null表示无路径，undefined表示无缓存）
-  getCachePathDistance () {
-    const cache = this.pathCache && this.pathCache.get(this.parentId)
+  getCachePathDistance (startId = this.parentId) {
+    const cache = this.pathCache && this.pathCache.get(startId)
     return cache && cache[1]
+  }
+
+  // 获取缓存路径的前一节点ID（当前父节点为起点，若无缓存路径，则返回当前父节点）
+  getCachePathLastId () {
+    const cache = this.pathCache && this.pathCache.get(this.parentId)
+    return cache ? cache[0] : this.parentId
   }
 
   // 缓存相邻节点表
@@ -86,10 +87,12 @@ export default class PathNode {
   // 节点坐标转ID
   static xyToId (x, y) {
     return x | (y << 16)
+    // return x + y * 10000
   }
 
   // 节点ID转坐标
   static idToXY (id) {
     return [id & 0xffff, id >> 16]
+    // return [id % 10000, Math.floor(id / 10000)]
   }
 }

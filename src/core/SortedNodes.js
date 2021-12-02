@@ -52,7 +52,7 @@ export default class SortedNodes {
     }
   }
 
-  // 更新节点顺序
+  // 更新节点顺序（只考虑优先级变高的情况）
   update (node) {
     if (this.heapSort) {
       this.__sinkDown(this.nodes.indexOf(node))

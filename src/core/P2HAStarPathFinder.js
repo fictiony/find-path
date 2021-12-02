@@ -11,6 +11,7 @@ import SortedNodes from './SortedNodes'
 
 export default class P2HAStarPathFinder extends AStarPathFinder {
   maxLayer = 0 // 最高层级（层数越多所占的缓存空间也会越多，但复用性也会越好）
+  tempNodes = null // 递归寻路时用到的临时节点表
 
   // 构造函数
   // - @options 功能选项增加：
@@ -18,6 +19,11 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
   constructor (genNode, options = {}) {
     super(genNode, options)
     this.maxLayer = options.maxLayer || 3
+  }
+
+  // 获取指定ID的节点（重载）
+  getNode (id) {
+    return (this.tempNodes && this.tempNodes.get(id)) || super.getNode(id)
   }
 
   // 获取相邻节点列表（重载）
@@ -101,10 +107,14 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
   // - @return 若指定limitRange，则不再返回路径节点列表，而是返回路径长度（找不到路径和取消寻路时仍然返回null和undefined）
   async findPath (startNode, targetNode, limitRange) {
     if (limitRange) {
+      // 若为递归寻路，则重建节点记录表
       this.openNodes = new SortedNodes(
         this.comparePriority,
         this.openNodes.heapSort
       )
+      this.tempNodes = new Map()
+      this.tempNodes.set(startNode.id, startNode)
+      this.tempNodes.set(targetNode.id, targetNode)
     } else {
       this.reset(true)
     }
@@ -122,33 +132,49 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
     if (openNotify && (await openNotify(startNode, 1))) return
 
     // 开始搜索
-    const { updateNotify, closeNotify } = this
+    const { tempNodes, updateNotify, closeNotify } = this
     let node
     while ((node = openNodes.pop())) {
-      const { id: nodeId, layer: nodeLayer } = node
+      const { id, layer } = node
+      console.log(`checkNode: ${id} (${node.parentId} @${layer}`)
 
-      // 若为大格节点，则取缓存路径长度
-      if (nodeLayer > 0) {
+      // 若为大格节点且之前尚无路径，则取缓存路径长度
+      if (layer > 0 && !node.hasCachePath) {
+        const parentNode = this.getNode(node.parentId)
         let distance = node.getCachePathDistance()
 
-        // 若无缓存，则递归搜索大格内路径
+        // 若无缓存，则递归搜索大格内路径，并加缓存
         if (distance === undefined) {
-          const parentNode = this.nodes.get(node.parentId)
-          const minX = (node.x << nodeLayer) >> nodeLayer
-          const minY = (node.y << nodeLayer) >> nodeLayer
-          const size = 1 << nodeLayer
-          distance = await this.findPath(parentNode.clone(), node.clone(), {
+          const minX = (parentNode.x >> layer) << layer
+          const minY = (parentNode.y >> layer) << layer
+          const size = 1 << layer
+          const copyNode = node.clone()
+
+          // 递归寻路
+          console.log(
+            `findPath: ${parentNode.id} -> ${
+              node.id
+            } in (${minX},${minY}-${minX + size - 1},${minY + size - 1})`
+          )
+          distance = await this.findPath(parentNode.clone(), copyNode, {
             minX,
             maxX: minX + size - 1,
             minY,
             maxY: minY + size - 1
           })
-          if (distance === undefined) return // 已取消寻路
 
           // 恢复递归前搜索状态
           this.openNodes = openNodes
+          this.tempNodes = tempNodes
           this.findPathVer = ver
           this.targetNode = targetNode
+
+          // 缓存路径
+          if (distance === undefined) return // 已取消寻路
+          console.log(
+            `cachePath: ${parentNode.id} -> ${node.id} = ${distance} (${copyNode.parentId} @${copyNode.layer})`
+          )
+          node.cachePath(node.parentId, copyNode.getCachePathLastId(), distance)
         }
 
         // 若无路径，则关闭节点，并忽略
@@ -160,12 +186,12 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
 
         // 更新节点状态
         const oldPriority = node.priority
-        node.parentId = 1 // TODO 改成谁？
-        node.distance = distance
+        node.distance = parentNode.distance + distance
         node.priority = this.calcPriority(node)
 
         // 若节点优先级比原先低，则重新加回开启列表（视作更新）
         if (node.priority > oldPriority) {
+          node.hasCachePath = true
           openNodes.push(node)
           if (updateNotify && (await updateNotify(node, 2))) return
           continue
@@ -177,42 +203,55 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
       if (closeNotify && (await closeNotify(node, 0))) return
 
       // 到达目标点则结束寻路
-      if (node.id === targetNode.id) {
+      if (node === targetNode) {
         if (limitRange) return node.distance // 递归寻路时改为返回路径长度
         return this.backtrace(node).reverse()
       }
 
       // 将相邻节点加入开启列表
-      const [neighbors, layer] = this.getNeighbors(node)
-      if (!neighbors.length) continue
-      const neighborHeurists = node.neighborsCache.get(layer)
+      const [neighbors, newLayer] = this.getNeighbors(node)
+      let neighborHeurists
       for (let n of neighbors) {
         if (n.closeVer === ver) continue // 忽略已关闭的节点（因为其路径必然更短）
+        const nId = n.id
 
         // 递归寻路时排除范围外的节点（目标点除外）
-        if (limitRange && n.id !== targetNode.id) {
+        if (limitRange && n !== targetNode) {
           if (n.x < limitRange.minX || n.x > limitRange.maxX) continue
           if (n.y < limitRange.minY || n.y > limitRange.maxY) continue
         }
 
-        // 若相邻节点已开启且路径更短，则忽略
+        // 若相邻节点无路径，则忽略
+        let cost = node.neighbors.get(nId)
+        if (newLayer > 0 && cost == null) {
+          cost = n.getCachePathDistance(id)
+          if (cost === null) continue
+        }
+        console.log(
+          `openNode: ${nId} = ${node.distance} + ${cost} (${id} @${newLayer})`
+        )
+
+        // 若相邻节点已开启且路径更短，也忽略？？
         const isOpen = n.openVer === ver
-        const distance = node.distance + (layer > 0 ? 0 : costs.get(n.id)) // 对于大格相邻节点的距离尚未知
+        let distance
+        if (cost == null) {
+          neighborHeurists ||= node.neighborsCache.get(newLayer)
+          distance = node.distance + neighborHeurists.get(nId)
+        } else {
+          distance = node.distance + cost
+        }
         if (isOpen && n.distance <= distance) continue
 
         // 更新相邻节点状态
-        if (limitRange && !isOpen) {
+        if (limitRange && !isOpen && !this.tempNodes.has(nId)) {
           n = n.clone() // 递归寻路时创建拷贝，避免影响最外层寻路状态
+          this.tempNodes.set(nId, n)
         }
-        n.layer = layer
-        n.parentId = nodeId
+        n.layer = newLayer
+        if (newLayer > 0) n.hasCachePath = cost != null
+        n.parentId = id
         n.distance = distance
-        if (layer > 0) {
-          n.priority = this.calcPriority(n) + costs.get(n.id) // 对于大格还要叠加相邻节点的启发值
-        } else {
-          n.priority = this.calcPriority(n)
-          n.cacheParent(nodeId, nodeId)
-        }
+        n.priority = this.calcPriority(n)
 
         // 若已开启，则更新在列表中的顺序，否则加入开启列表
         n.openIndex = ++openIndex
@@ -230,14 +269,14 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
     return null
   }
 
-  // // 回溯节点获取路径（重载）
-  // backtrace (node) {
-  //   const path = [node]
-  //   while (true) {
-  //     node = this.nodes.get(node.getCacheParentId())
-  //     if (!node) break
-  //     path.push(node)
-  //   }
-  //   return path
-  // }
+  // 回溯节点获取路径（重载）
+  backtrace (node) {
+    const path = [node]
+    while (true) {
+      node = this.getNode(node.getCachePathLastId())
+      if (!node) break
+      path.push(node)
+    }
+    return path
+  }
 }

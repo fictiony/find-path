@@ -335,6 +335,7 @@ export default {
           await vm.$sleep(100)
           await benchmark()
           vm.loading = false
+          vm.$notify('请查看控制台输出')
         }
       },
       ...(vm.$inspector
@@ -361,6 +362,7 @@ export default {
                 await vm.$sleep(100)
                 await test()
                 vm.loading = false
+                vm.$notify('请查看控制台输出')
               }
             }
           ]
