@@ -10,23 +10,24 @@ import AStarPathFinder from './AStarPathFinder'
 
 export default class P2HAStarPathFinder extends AStarPathFinder {
   maxLayer = 0 // 最高层级（层数越多所占的缓存空间也会越多，但复用性也会越好）
-  curLayer = 0 // 当前搜索层级
 
   // 构造函数
   // - @options 功能选项增加：
   //    maxLayer 最高层数（默认5）
   constructor (genNode, options = {}) {
     super(genNode, options)
-    this.maxLayer = options.maxLayer || 5
+    this.maxLayer = options.maxLayer || 3
   }
 
   // 获取相邻节点列表（重载）
+  // - @return [ 相邻节点列表, 当前层级 ]
   getNeighbors (node) {
     const { x, y } = node
     const { x: tx, y: ty } = this.targetNode
+    const neighbors = node.neighbors ? null : super.getNeighbors(node) // 确保node.neighbors已存在
 
     // 先判断可用的最大层级（需满足和目标点不在同一大格，且层级不超过当前层级+1）
-    for (let i = Math.min(this.maxLayer, this.curLayer + 1); i > 0; i--) {
+    for (let i = Math.min(this.maxLayer, node.layer + 1); i > 0; i--) {
       const lx = x >> i
       const ly = y >> i
       const ltx = tx >> i
@@ -34,13 +35,11 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
       if (lx === ltx && ly === lty) continue
 
       // 取该层级大格的边缘小格作为相邻节点
-      this.curLayer = i
-      return this.getLayerNeighbors(node, i)
+      return [this.getLayerNeighbors(node, i), i]
     }
 
     // 若无可用的大格，则返回小格本身的邻格
-    this.curLayer = 0
-    return super.getNeighbors(node)
+    return [neighbors || super.getNeighbors(node), 0]
   }
 
   // 获取指定层级的相邻节点列表
@@ -96,23 +95,11 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
     return neighbors
   }
 
-  // 回溯节点获取路径（重载）
-  backtrace (node) {
-    const path = [node]
-    while (true) {
-      node = this.nodes.get(node.getCacheParentId())
-      if (!node) break
-      path.push(node)
-    }
-    return path
-  }
-
   // 寻路（重载）
   async findPath (startNode, targetNode) {
     this.reset(true)
     const ver = ++this.findPathVer
     let openIndex = 0
-    this.curLayer = -1
     this.targetNode = targetNode
 
     // 将起始节点加入开启列表
@@ -120,6 +107,7 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
     startNode.reset()
     startNode.openVer = ver
     startNode.openIndex = ++openIndex
+    startNode.layer = -1
     openNodes.push(startNode)
     if (openNotify && (await openNotify(startNode, 1))) return null
 
@@ -127,9 +115,11 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
     const { updateNotify, closeNotify } = this
     let node
     while ((node = openNodes.pop())) {
+      const nodeId = node.id
+
       // 若节点无缓存路径，则先搜索大格内路径
       if (!node.hasCachePath()) {
-        // TODO 搜索大格内路径
+        // TODO 递归搜索大格内路径
         continue
       } else {
         // 否则关闭节点
@@ -143,23 +133,26 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
       }
 
       // 将相邻节点加入开启列表
-      const neighbors = this.getNeighbors(node)
-      const layer = this.curLayer
+      const [neighbors, layer] = this.getNeighbors(node)
+      const costs = layer > 0 ? node.neighborsCache.get(layer) : node.neighbors
       for (const n of neighbors) {
         if (n.closeVer === ver) continue // 忽略已关闭的节点（因为其路径必然更短）
 
         // 若相邻节点已开启且路径更短，则忽略
         const isOpen = n.openVer === ver
-        const distance =
-          node.distance + (layer > 0 ? 0 : node.neighbors.get(n.id)) // 对于大格相邻节点的距离尚未知
+        const distance = node.distance + (layer > 0 ? 0 : costs.get(n.id)) // 对于大格相邻节点的距离尚未知
         if (isOpen && n.distance <= distance) continue
 
         // 更新相邻节点状态
-        n.parentId = node.id
+        n.layer = layer
+        n.parentId = nodeId
         n.distance = distance
-        n.priority =
-          this.calcPriority(n) +
-          (layer === 0 ? 0 : node.neighborsCache.get(layer).get(n.id)) // 对于大格还要叠加相邻节点的启发值
+        if (layer > 0) {
+          n.priority = this.calcPriority(n) + costs.get(n.id) // 对于大格还要叠加相邻节点的启发值
+        } else {
+          n.priority = this.calcPriority(n)
+          n.cacheParent(nodeId, nodeId)
+        }
 
         // 若已开启，则更新在列表中的顺序，否则加入开启列表
         n.openIndex = ++openIndex
@@ -175,5 +168,16 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
     }
 
     return null
+  }
+
+  // 回溯节点获取路径（重载）
+  backtrace (node) {
+    const path = [node]
+    while (true) {
+      node = this.nodes.get(node.getCacheParentId())
+      if (!node) break
+      path.push(node)
+    }
+    return path
   }
 }

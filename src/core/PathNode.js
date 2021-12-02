@@ -12,9 +12,10 @@ export default class PathNode {
   // openVer = 0 // 开启状态版本号（与寻路版本号相同时表示节点已开启）
   // closeVer = 0 // 关闭状态版本号（与寻路版本号相同时表示节点已关闭）
   // openIndex = 0 // 开启序号（用于优先级排序）
-  // parentCache = null // 父节点缓存（需用Map）：{ 对应起点ID: 父节点ID }
-  // neighborsCache = null // 相邻节点表分层缓存（需用Map）：{ 层级: { 节点ID: 启发函数值 } }
-  // 注：不初始化上述属性，可在一定程度上节省内存消耗
+  // parentCache = null // 父节点缓存（需用Map）：{ 对应起点ID: 父节点ID }  ——仅用于P2HAStar算法
+  // neighborsCache = null // 相邻节点表分层缓存（需用Map）：{ 层级: { 节点ID: 启发函数值 } }  ——仅用于P2HAStar算法
+  // layer = 0 // 节点所在搜索层级  ——仅用于P2HAStar算法
+  // 注：不初始化上述属性，可在一定程度上节省内存消耗，而且部分属性是只有个别寻路算法才用的到
 
   // 构造函数
   constructor (x = 0, y = 0, cost = 1) {
@@ -22,6 +23,11 @@ export default class PathNode {
     this.y = y
     this.id = PathNode.xyToId(x, y)
     this.cost = cost
+  }
+
+  // 克隆一份（相邻节点距离表和缓存表共享引用）
+  clone () {
+    return Object.setPrototypeOf({ ...this }, Object.getPrototypeOf(this))
   }
 
   // 重置节点状态

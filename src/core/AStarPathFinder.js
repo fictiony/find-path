@@ -70,6 +70,10 @@ export default class AStarPathFinder extends DijkstraPathFinder {
 
   // 节点优先级比较（重载）
   comparePriority (nodeA, nodeB) {
-    return nodeA.priority - nodeB.priority || nodeA.heurist - nodeB.heurist || nodeA.openIndex - nodeB.openIndex
+    return (
+      nodeA.priority - nodeB.priority ||
+      nodeA.heurist - nodeB.heurist ||
+      nodeA.openIndex - nodeB.openIndex
+    )
   }
 }
