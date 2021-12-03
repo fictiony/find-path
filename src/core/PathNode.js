@@ -1,5 +1,8 @@
 // 【路径节点】
 
+// 直接引用原始节点的属性
+const DIRECT_PROPS = ['neighbors', 'neighborsCache', 'pathCache']
+
 export default class PathNode {
   // x = 0 // 节点X坐标
   // y = 0 // 节点Y坐标
@@ -29,9 +32,20 @@ export default class PathNode {
     this.cost = cost
   }
 
-  // 克隆一份（相邻节点距离表和缓存表共享引用）
-  clone () {
-    return Object.setPrototypeOf({ ...this }, Object.getPrototypeOf(this))
+  // 创建节点引用对象
+  // - neighbors、neighborsCache、pathCache属性直接读写原始节点
+  // - 额外增加node属性，用以记录原始节点
+  ref () {
+    const node = this.node || this
+    const ref = { node }
+    Object.setPrototypeOf(ref, node)
+    DIRECT_PROPS.forEach(prop =>
+      Object.defineProperty(ref, prop, {
+        get: () => node[prop],
+        set: val => (node[prop] = val)
+      })
+    )
+    return ref
   }
 
   // 重置节点状态
@@ -47,14 +61,13 @@ export default class PathNode {
   // - @distance 路径长度（空表示无路径）
   cachePath (startId, lastId, distance) {
     this.pathCache ||= new Map()
+    if (this.pathCache.has(startId)) {
+      console.log(
+        `oldPath: ${startId} -> ${this.id} = ${this.pathCache.get(startId)}`
+      )
+    }
     this.pathCache.set(startId, distance == null ? null : [lastId, distance])
   }
-
-  // 判断是否有路径缓存（以当前父节点为起点，无父节点或缓存为无路径也返回true）
-  // hasCachePath () {
-  //   if (this.parentId == null) return true
-  //   return this.pathCache ? this.pathCache.has(this.parentId) : false
-  // }
 
   // 获取缓存路径的长度
   // - @startId 起点ID（默认取父节点ID）
@@ -64,10 +77,12 @@ export default class PathNode {
     return cache && cache[1]
   }
 
-  // 获取缓存路径的前一节点ID（当前父节点为起点，若无缓存路径，则返回当前父节点）
-  getCachePathLastId () {
-    const cache = this.pathCache && this.pathCache.get(this.parentId)
-    return cache ? cache[0] : this.parentId
+  // 获取缓存路径的前一节点ID
+  // - @startId 起点ID（默认取父节点ID）
+  // - @return 前一节点ID（若无缓存路径，则返回起点ID）
+  getCachePathLastId (startId = this.parentId) {
+    const cache = this.pathCache && this.pathCache.get(startId)
+    return cache ? cache[0] : startId
   }
 
   // 缓存相邻节点表
@@ -86,13 +101,13 @@ export default class PathNode {
 
   // 节点坐标转ID
   static xyToId (x, y) {
-    return x | (y << 16)
-    // return x + y * 10000
+    // return x | (y << 16)
+    return x + y * 10000
   }
 
   // 节点ID转坐标
   static idToXY (id) {
-    return [id & 0xffff, id >> 16]
-    // return [id % 10000, Math.floor(id / 10000)]
+    // return [id & 0xffff, id >> 16]
+    return [id % 10000, Math.floor(id / 10000)]
   }
 }
