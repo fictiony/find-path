@@ -4,7 +4,7 @@
 // - 先在起点终点位于不同大格的最高层级中进行A*寻路（相邻节点取大格边缘可到达的相邻小格，并缓存大格内路径，路径未知时先内部递归寻路，路径限制在大格内）
 // - 将最高层级中的路径叠加上起点终点到大格边缘的部分路径，即为完整的路径
 // - 由于每层大格内的路径可预先缓存，因此可以减少寻路过程的展开节点数，并提高路线的复用性，减少重复多次寻路的平均耗时
-// - 缺点是只适用于标准直角网格类地图（否则没法实现分层合并大格）
+// - 缺点是只适用于标准直角网格类地图（否则没法实现分层合并大格），而且太费内存
 
 import AStarPathFinder from './AStarPathFinder'
 import PathNode from './PathNode'
@@ -182,9 +182,9 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
 
           // 递归寻路（最高层级要比当前层级小，否则会出现死循环）
           const maxLayer = layer - this.minLayer
-          console.log(
-            `findPath: ${parentId} -> ${id} in (${minX},${minY}--${maxX},${maxY} @${maxLayer})`
-          )
+          // console.log(
+          //   `findPath: ${parentId} -> ${id} in (${minX},${minY}--${maxX},${maxY} @${maxLayer})`
+          // )
           const ref = node.ref()
           const limit = { minX, maxX, minY, maxY, maxLayer }
           const path = await this.findPath(parentNode.ref(), ref, limit)
@@ -201,9 +201,6 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
             distance = ref.distance
             for (let i = path.length - 2, dist = distance; i > 0; i--) {
               dist -= path[i].neighbors.get(path[i + 1].id)
-              if (isNaN(dist)) {
-                debugger
-              }
               path[i].cachePath(parentId, path[i - 1].id, dist)
             }
           }
