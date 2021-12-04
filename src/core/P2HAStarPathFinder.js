@@ -7,21 +7,32 @@
 // - 缺点是只适用于标准直角网格类地图（否则没法实现分层合并大格）
 
 import AStarPathFinder from './AStarPathFinder'
+import PathNode from './PathNode'
 import SortedNodes from './SortedNodes'
 
 export default class P2HAStarPathFinder extends AStarPathFinder {
   minLayer = 0 // 最低层级
   maxLayer = 0 // 最高层级（层数越多所占的缓存空间也会越多，但复用性也会越好）
   nodeRefs = null // 递归寻路时用到的节点引用表
+  layerOpened = new Map() // 当前寻路已展开过的层级记录：{ 层级: { 节点ID: true } }
 
   // 构造函数
   // - @options 功能选项增加：
-  //    minLayer 最低层级（默认3）
-  //    maxLayer 最高层级（默认6）
+  //    minLayer 最低层级（需>0，默认3）
+  //    maxLayer 最高层级（需>minLayer，默认6）
   constructor (genNode, options = {}) {
     super(genNode, options)
-    this.minLayer = options.minLayer || 3
-    this.maxLayer = options.maxLayer || 6
+    this.minLayer = Math.max(1, options.minLayer || 3)
+    this.maxLayer = Math.max(this.minLayer, options.maxLayer || 6)
+    for (let i = this.minLayer; i <= this.maxLayer; i++) {
+      this.layerOpened.set(i, new Map())
+    }
+  }
+
+  // 重置状态缓存（重载）
+  reset (keepNodes) {
+    this.layerOpened.forEach(i => i.clear())
+    super.reset(keepNodes)
   }
 
   // 获取指定ID的节点（重载）
@@ -64,6 +75,15 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
   getLayerNeighbors (node, layer) {
     const neighbors = []
 
+    // 若该层级的相邻节点已展开过，则忽略
+    const { x, y } = node
+    const x0 = (x >> layer) << layer
+    const y0 = (y >> layer) << layer
+    const id0 = PathNode.xyToId(x0, y0)
+    const layerOpened = this.layerOpened.get(layer)
+    if (layerOpened.get(id0)) return neighbors
+    layerOpened.set(id0, true)
+
     // 已有缓存则直接获取节点，否则自动检测边缘小格
     const cache = node.getCacheNeighbors(layer)
     if (cache) {
@@ -77,9 +97,6 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
       // :        :
       // 2        3
       // 7 4 .. 4 8
-      const { x, y } = node
-      const x0 = (x >> layer) << layer
-      const y0 = (y >> layer) << layer
       const a = 1 << layer
       let n
       for (let i = a - 1; i >= 0; i--) {
@@ -164,12 +181,12 @@ export default class P2HAStarPathFinder extends AStarPathFinder {
           const maxY = minY + size - 1
 
           // 递归寻路（最高层级要比当前层级小，否则会出现死循环）
+          const maxLayer = layer - this.minLayer
           console.log(
-            `findPath: ${parentId} -> ${id} in (${minX},${minY}--${maxX},${maxY} @${layer -
-              3})`
+            `findPath: ${parentId} -> ${id} in (${minX},${minY}--${maxX},${maxY} @${maxLayer})`
           )
           const ref = node.ref()
-          const limit = { minX, maxX, minY, maxY, layer: layer - 1 }
+          const limit = { minX, maxX, minY, maxY, maxLayer }
           const path = await this.findPath(parentNode.ref(), ref, limit)
 
           // 恢复递归前搜索状态
