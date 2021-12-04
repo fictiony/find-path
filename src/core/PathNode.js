@@ -61,11 +61,16 @@ export default class PathNode {
   // - @distance 路径长度（空表示无路径）
   cachePath (startId, lastId, distance) {
     this.pathCache ||= new Map()
-    if (this.pathCache.has(startId)) {
-      console.log(
-        `oldPath: ${startId} -> ${this.id} = ${this.pathCache.get(startId)}`
-      )
+    const cache = this.pathCache.get(startId)
+    if (cache !== undefined) {
+      if (distance == null) return
+      if (cache && cache[1] < distance + 1e-8) return
     }
+    // console.log(
+    //   `cachePath: ${startId} -> ${this.id} = ${distance} (${lastId}${
+    //     cache === undefined ? '' : ' update'
+    //   })`
+    // )
     this.pathCache.set(startId, distance == null ? null : [lastId, distance])
   }
 
@@ -101,13 +106,13 @@ export default class PathNode {
 
   // 节点坐标转ID
   static xyToId (x, y) {
-    // return x | (y << 16)
-    return x + y * 10000
+    return x | (y << 16)
+    // return x + y * 10000
   }
 
   // 节点ID转坐标
   static idToXY (id) {
-    // return [id & 0xffff, id >> 16]
-    return [id % 10000, Math.floor(id / 10000)]
+    return [id & 0xffff, id >> 16]
+    // return [id % 10000, Math.floor(id / 10000)]
   }
 }
