@@ -3,8 +3,3 @@
     <router-view />
   </div>
 </template>
-
-<script>
-// 【主程序】
-export default {}
-</script>

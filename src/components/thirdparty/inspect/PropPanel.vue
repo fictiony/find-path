@@ -101,7 +101,6 @@ export default {
 
   data: () => ({
     inspect,
-    apiMap: {},
     component: '',
     showName: '',
     apiDoc: '',
@@ -131,41 +130,45 @@ export default {
       }
     },
 
-    async 'inspect.target'(val) {
-      if (window) {
-        window.$c = val // 方便在浏览器内调试
-      }
-      this.unwatchProps()
+    'inspect.target': {
+      handler: async function (val) {
+        if (window) {
+          window.$c = val // 方便在浏览器内调试
+        }
+        this.unwatchProps()
 
-      if (val) {
-        let api, superApi
-        if (val.$options) {
-          this.component = this.$getName(val.$options)
-          this.showName = this.component + NAME_SUFFIX.component
-          this.superName = (val.$options.extends && this.$getName(val.$options.extends.options)) || ''
-          api = await this.loadApi(this.component)
-          superApi = this.superName === this.component ? {} : await this.loadApi(this.superName)
-          this.propList = this.makePropList(val, api.props, superApi.props)
+        if (val) {
+          let api, superApi
+          if (val.$options) {
+            this.component = this.$getName(val.$options)
+            this.showName = this.component + NAME_SUFFIX.component
+            this.superName = (val.$options.extends && this.$getName(val.$options.extends.options)) || ''
+            if (this.superName === this.component) this.superName = ''
+            api = this.component ? await this.loadApi(this.component) : {}
+            superApi = this.superName ? await this.loadApi(this.superName) : {}
+            this.propList = this.makePropList(val, api.props, superApi.props)
+          } else {
+            this.component = ''
+            this.showName = val.className + (NAME_SUFFIX[val.category] || NAME_SUFFIX.component)
+            this.superName = val.extends || ''
+            api = val.className ? await this.loadApi(val.className) : {}
+            superApi = this.superName ? await this.loadApi(this.superName) : {}
+            this.propList = []
+          }
+          this.apiDoc = inspect.getDocUrl ? inspect.getDocUrl(this.component || val.className) || '' : ''
+          this.superDoc = inspect.getDocUrl ? inspect.getDocUrl(this.superName) || '' : ''
+          this.otherApiList = Object.freeze(CATEGORIES.flatMap(i => this.makeOtherApiList(i, api[i], superApi[i])))
         } else {
           this.component = ''
-          this.showName = val.className + (NAME_SUFFIX[val.category] || NAME_SUFFIX.component)
-          this.superName = val.extends || ''
-          api = await this.loadApi(val.className)
-          superApi = await this.loadApi(this.superName)
+          this.showName = ''
+          this.apiDoc = ''
+          this.superName = ''
+          this.superDoc = ''
           this.propList = []
+          this.otherApiList = []
         }
-        this.apiDoc = api.doc || ''
-        this.superDoc = superApi.doc || ''
-        this.otherApiList = Object.freeze(CATEGORIES.flatMap(i => this.makeOtherApiList(i, api[i], superApi[i])))
-      } else {
-        this.component = ''
-        this.showName = ''
-        this.apiDoc = ''
-        this.superName = ''
-        this.superDoc = ''
-        this.propList = []
-        this.otherApiList = []
-      }
+      },
+      immediate: true
     }
   },
 
@@ -234,8 +237,8 @@ export default {
         default: defVal,
         defaultDesc: apiProp.default !== undefined ? String(apiProp.default) : undefined,
         description,
-        isNew: superOptions && !superProp,
-        isUpdate: superProp && extendProps && extendProps[name],
+        isNew: !!(superOptions && !superProp),
+        isUpdate: !!(superProp && extendProps && extendProps[name]),
         unwatch: instance.$watch(
           name,
           debounce(val => {
@@ -257,14 +260,12 @@ export default {
       if (category === 'props' && this.component) {
         return [] // 组件属性不显示在其他接口里
       }
-      return Object.keys(Object.assign({}, api, superApi))
+      return Object.keys({ ...api, ...superApi })
         .map(name => {
           const apiOther = (api && api[name]) || (superApi && superApi[name])
           return this.makeOtherApiInfo(name, category, apiOther)
         })
-        .sort((a, b) => {
-          return a.name < b.name ? -1 : 1
-        })
+        .sortBy('name')
     },
 
     // 生成一条其他接口信息
@@ -397,11 +398,11 @@ export default {
 
     // 加载API文档
     async loadApi(className) {
-      if (!this.apiMap[className]) {
+      if (!inspect.apiCache[className]) {
         const file = inspect.extraApi[className] || import('quasar/dist/api/' + className + '.json')
         let api
         try {
-          api = (await file).default
+          api = this.$clone((await file).default)
           CATEGORIES.forEach(category => {
             let info = api[category]
             if (!info) return
@@ -447,11 +448,12 @@ export default {
             api[category] = info
           })
         } catch (e) {
+          // console.log(e)
           api = {}
         }
-        this.apiMap[className] = Object.freeze(api)
+        inspect.apiCache[className] = Object.freeze(api)
       }
-      return this.apiMap[className]
+      return inspect.apiCache[className]
     }
   },
 

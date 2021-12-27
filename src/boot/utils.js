@@ -920,6 +920,7 @@ export async function loadConfig (name) {
     }
   }
 }
+Vue.prototype.$loadConfig = loadConfig
 
 // 保存配置信息
 // - @name 配置项名称（空表示设置整个配置信息）
@@ -927,7 +928,7 @@ export async function loadConfig (name) {
 // - @combine 是否采用合并模式
 export async function saveConfig (name, data, combine) {
   if (ELECTRON) {
-    loadConfig() // 确保配置已加载
+    await loadConfig() // 确保配置已加载
     if (combine) {
       extend(true, name ? config[name] : config, data || {})
     } else if (name) {
@@ -940,6 +941,7 @@ export async function saveConfig (name, data, combine) {
     LocalStorage.set(cfg.name + '.' + name, data)
   }
 }
+Vue.prototype.$saveConfig = saveConfig
 
 // 清空所有配置信息
 export async function clearConfig () {
@@ -950,6 +952,7 @@ export async function clearConfig () {
     LocalStorage.clear()
   }
 }
+Vue.prototype.$clearConfig = clearConfig
 
 // 获取剪贴板文本内容
 // - @matchExpr 要求满足的正则表达式（可选）
@@ -961,6 +964,7 @@ export function getClipboardText (matchExpr) {
   }
   return ''
 }
+Vue.prototype.$getClipboardText = getClipboardText
 
 // 设置剪贴板文本内容
 export async function setClipboardText (text) {
@@ -970,6 +974,7 @@ export async function setClipboardText (text) {
   }
   await copyToClipboard(text)
 }
+Vue.prototype.$setClipboardText = setClipboardText
 
 // 获取剪贴板JSON对象
 // - @mark 识别标记（若指定，则剪贴板内格式需以“{"mark":”开头）
@@ -985,6 +990,7 @@ export function getClipboardJson (mark, noParse) {
   }
   return null
 }
+Vue.prototype.$getClipboardJson = getClipboardJson
 
 // 设置剪贴板JSON对象
 // - @obj 要设置的对象
@@ -995,3 +1001,4 @@ export async function setClipboardJson (obj, mark) {
   }
   await setClipboardText(JSON.stringify(obj))
 }
+Vue.prototype.$setClipboardJson = setClipboardJson

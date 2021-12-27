@@ -3,14 +3,21 @@
     <td class="_prop ellipsis" :class="nameColor" @dblclick="clickPropName">
       {{ name }}
       <q-icon class="float-right" name="info_outline" v-if="api.required || api.sync" />
-      <q-tooltip max-width="400px" anchor="top left" self="top right" :hide-delay="pinTooltip ? 99999999 : 0" ref="tooltip">
+      <q-tooltip
+        content-class="all-pointer-events"
+        max-width="400px"
+        anchor="top left"
+        self="top right"
+        :hide-delay="pinTooltip ? 99999999 : 0"
+        ref="tooltip"
+      >
         <div>
           <span class="text-h6">{{ name }}</span>
           <q-btn
             flat
             round
             dense
-            class="float-right all-pointer-events"
+            class="float-right"
             style="margin-top: -8px; margin-right: -12px"
             icon="close"
             size="xs"
@@ -28,7 +35,7 @@
         </div>
 
         <q-separator spaced="3px" color="transparent" />
-        <q-markdown class="q-ma-none all-pointer-events" :src="description || '暂无说明'" />
+        <q-markdown class="q-ma-none" :src="description || '暂无说明'" />
 
         <div v-if="hasDefault">
           <q-badge class="q-mr-sm" color="secondary" label="默认值" />

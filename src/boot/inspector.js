@@ -1,8 +1,5 @@
 // 【组件监视器】
 import Vue from 'vue'
-import Plugin from '@quasar/quasar-ui-qmarkdown'
-import '@quasar/quasar-ui-qmarkdown/dist/index.css'
-Vue.use(Plugin)
 import { inspect, PropPanel } from 'components/thirdparty/inspect'
 import { showDlg } from 'boot/utils'
 

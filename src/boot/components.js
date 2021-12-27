@@ -5,10 +5,8 @@ import Vue from 'vue'
 // import '@quasar/quasar-ui-qmarkdown/dist/index.css'
 // Vue.use(Plugin)
 // import { QEditableTd, QSelectableTd } from 'components/thirdparty/qmodeltd'
-import {
-  // MySplitter,
-  MyDrawer
-} from 'components/thirdparty/plus'
+// import { MySplitter, MyDrawer } from 'components/thirdparty/plus'
+import MyDrawer from 'components/thirdparty/plus/MyDrawer'
 // import QLayoutNoScroll from 'components/thirdparty/QLayoutNoScroll'
 
 // 自定义组件

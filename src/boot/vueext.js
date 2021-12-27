@@ -28,15 +28,14 @@ PROP_TYPES.forEach(type => {
 // 【工具方法】
 const VUE_FILENAME_FORMAT = /[^./\\]+(?=\.vue$)/
 Object.assign(Vue.prototype, {
-
   // 输出日志（用于解决模板中无法使用console.log的缺陷）
-  $log(...args) {
+  $log (...args) {
     console.log(...args)
   },
 
   // 获取组件名
   // - @options 组件选项表（若未指定则取当前组件的选项表）
-  $getName(options) {
+  $getName (options) {
     options ||= this.$options
     const name = options.name || options._componentTag
     if (name) return name
@@ -44,21 +43,21 @@ Object.assign(Vue.prototype, {
       const filename = options.__file.match(VUE_FILENAME_FORMAT)[0]
       return filename ? `<${filename}.vue>` : '<Unknown Component>'
     }
-    return '<Anonymous Component>'
+    return this.$parent ? '<Anonymous Component>' : '<Root>'
   },
 
   // 转换驼峰命名
-  $toCamelCase(name) {
+  $toCamelCase (name) {
     return name.replace(/-\w/g, m => m[1].toUpperCase())
   },
 
   // 转换中划线命名
-  $toKebabCase(name) {
+  $toKebabCase (name) {
     return name.replace(/[A-Z]/g, m => '-' + m.toLowerCase()).replace(/^-/, '')
   },
 
   // 强制设置属性（屏蔽Vue警告）
-  $forceSet(prop, value) {
+  $forceSet (prop, value) {
     if (process.env.NODE_ENV === 'production') {
       this[prop] = value
     } else {
@@ -83,7 +82,7 @@ Object.assign(Vue.prototype, {
   // - @defaults 默认虚拟节点列表（插槽未指定时取）
   // - @after 要合并到的已有虚拟节点列表，若指定，则将插槽内容合并到该列表后面，并返回合并后的列表
   // - @return 虚拟节点列表
-  $getSlot(slot, defaults, after) {
+  $getSlot (slot, defaults, after) {
     const f = this.$scopedSlots[slot]
     const nodes = f == null ? defaults || [] : f()
     return after == null ? nodes : after.concat(nodes)
@@ -94,7 +93,7 @@ Object.assign(Vue.prototype, {
   // - @id 注入ID（相同ID的注入将被替换而非新增，但一前一后则可共存）
   // - @nodes 要注入的虚拟节点列表（null表示删除该注入），亦可为一个返回虚拟节点列表的函数（参数为注入前的虚拟节点列表），表示整体替换
   // - @before 是否加到最前面（否则加到最后面），替换时位置不变（当nodes为函数时忽略此参数）
-  $injectSlot(slot, id, nodes, before = false) {
+  $injectSlot (slot, id, nodes, before = false) {
     const injection = { id, nodes }
     const f = this.$scopedSlots[slot]
     if (f && f.__origSlot) {
