@@ -1,9 +1,13 @@
-// 【测试寻路算法】
-// - 个人研究测试中的寻路算法
+// 【中心线A*寻路算法】
+// - 由于A*寻路算法在展开节点时只考虑已走路径的距离和预估距离的影响，因此得到的最优路径虽然在距离上是最短的，但在形状上却往往并不符合人的思维
+// - 为了让找到的路径尽量靠近起止点间的连线（即中心线），故在A*基础上增加了对节点展开顺序的优化
+// - 基本思想就是：
+//   1. 优先展开更靠近中心线的节点
+//   2. 节点优先级排序中也加入对偏离中心线的累计量作次级参考
 
 import AStarPathFinder from './AStarPathFinder'
 
-export default class TestPathFinder extends AStarPathFinder {
+export default class CentralAStarPathFinder extends AStarPathFinder {
   // 寻路（重载）
   async findPath (startNode, targetNode) {
     const dx = targetNode.x - startNode.x

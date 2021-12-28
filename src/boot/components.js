@@ -1,13 +1,11 @@
 import Vue from 'vue'
 
 // 第三方组件
-// import Plugin from '@quasar/quasar-ui-qmarkdown'
-// import '@quasar/quasar-ui-qmarkdown/dist/index.css'
-// Vue.use(Plugin)
 // import { QEditableTd, QSelectableTd } from 'components/thirdparty/qmodeltd'
 // import { MySplitter, MyDrawer } from 'components/thirdparty/plus'
 import MyDrawer from 'components/thirdparty/plus/MyDrawer'
 // import QLayoutNoScroll from 'components/thirdparty/QLayoutNoScroll'
+import CustomScroller from 'components/thirdparty/inspect/CustomScroller'
 
 // 自定义组件
 import CustomMenu from 'components/custom/CustomMenu.vue'
@@ -40,6 +38,7 @@ const components = {
   // MySplitter,
   MyDrawer,
   // QLayoutNoScroll,
+  CustomScroller,
 
   CustomMenu,
   FloatPanel,

@@ -14,6 +14,7 @@ import AStarPathFinder from 'src/core/AStarPathFinder'
 import DijkstraPathFinder from 'src/core/DijkstraPathFinder'
 import BestFirstPathFinder from 'src/core/BestFirstPathFinder'
 import BreadthFirstPathFinder from 'src/core/BreadthFirstPathFinder'
+import CentralAStarPathFinder from 'src/core/CentralAStarPathFinder'
 import BiAStarPathFinder from 'src/core/BiAStarPathFinder'
 import BiDijkstraPathFinder from 'src/core/BiDijkstraPathFinder'
 import BiBestFirstPathFinder from 'src/core/BiBestFirstPathFinder'
@@ -111,7 +112,9 @@ const state = () => ({
   // dijkstra - 最短路径寻路
   // bestfirst - 最近优先寻路
   // breadthfirst - 广度优先寻路
+  // centralastar - 中心线A*寻路
   // js_astar - 第三方A*寻路
+  // test - 测试寻路
   heuristic: 'manhattan', // 当前算法使用的启发函数类型：
   // manhattan - 曼哈顿距离
   // euclidean - 欧几里德距离
@@ -287,6 +290,8 @@ const getters = {
           : new BestFirstPathFinder(genNode, state)
       case 'breadthfirst':
         return new BreadthFirstPathFinder(genNode, state)
+      case 'centralastar':
+        return new CentralAStarPathFinder(genNode, state)
       case 'test':
         return new TestPathFinder(genNode, state)
       case 'js_astar':

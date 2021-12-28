@@ -39,6 +39,12 @@ export const ALGORITHMS = Object.freeze([
 <br>注：仅用于参考对比，实际环境中很少用到`
   },
   {
+    value: 'centralastar',
+    label: '中心线A*寻路',
+    tips:
+      '在A*基础上增加了对节点展开顺序的优化，以修正A*返回的最优路径虽然在距离上最短，但在形状上却不符合人思维的问题'
+  },
+  {
     value: 'js_astar',
     label: '第三方A*寻路',
     tips: `目前Github上star数最高的JS版A*算法代码

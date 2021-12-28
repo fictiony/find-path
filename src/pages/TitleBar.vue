@@ -79,7 +79,7 @@ export default {
         label: '采用双向搜索',
         icon: () => (vm.bidirectional ? 'done' : ''),
         handler: () => (vm.bidirectional = !vm.bidirectional),
-        disable: () => ['breadthfirst', 'js_astar'].includes(vm.algorithm)
+        disable: () => ['breadthfirst', 'centralastar', 'js_astar'].includes(vm.algorithm)
       },
       {
         label: '采用二叉堆排序',

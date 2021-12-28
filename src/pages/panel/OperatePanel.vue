@@ -1,6 +1,6 @@
 <template>
   <FloatPanel title="操作面板" state="operatePanel" :style="{ backgroundColor: $q.dark.isActive ? '#0006' : '#fff6' }">
-    <q-scroll-area class="fit column q-px-sm q-py-xs">
+    <CustomScroller class="fit column q-px-sm q-py-xs">
       <CommonForm
         class="_form q-pa-sm"
         :form="form"
@@ -11,7 +11,7 @@
         @input="onInput"
       />
       <BrushPattern class="q-mx-sm q-pa-xs float-left" style="background-color: #8881; border: 1px solid #8888; border-radius: 4px" />
-    </q-scroll-area>
+    </CustomScroller>
   </FloatPanel>
 </template>
 
@@ -186,7 +186,7 @@ export default {
       return {
         heuristic: ['dijkstra', 'breadthfirst'].includes(this.algorithm),
         heuristWeight: this.algorithm !== 'bestfirst',
-        bidirectional: ['breadthfirst', 'js_astar'].includes(this.algorithm),
+        bidirectional: ['breadthfirst', 'centralastar', 'js_astar'].includes(this.algorithm),
         heapSort: ['breadthfirst', 'js_astar'].includes(this.algorithm),
         showDelay: !this.showState
       }
