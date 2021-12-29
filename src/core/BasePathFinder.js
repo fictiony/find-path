@@ -88,7 +88,7 @@ export default class BasePathFinder {
         if (!n8 && (n8 = this.getNodeAt(x + 1, y + 1))) neighbors.push(n8)
       }
 
-      // 更新相邻节点列表
+      // 更新相邻节点距离表
       const stepCosts = new Map()
       for (const n of neighbors) {
         const step = n.x === x || n.y === y ? 0.5 : Math.SQRT1_2

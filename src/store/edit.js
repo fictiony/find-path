@@ -1,14 +1,18 @@
 // 【编辑相关】
-import { LocalStorage } from 'quasar'
 import {
+  loadJson,
+  assert,
   sleep,
   ROOT,
   genMutations,
   B,
   notify,
   showMsg,
-  setClipboardText
+  dlgPost,
+  utilPost,
+  setClipboardJson
 } from 'boot/utils'
+import { JSON_FILE_FILTERS } from 'boot/filefilters'
 import PathNode from 'src/core/PathNode'
 import AStarPathFinder from 'src/core/AStarPathFinder'
 import DijkstraPathFinder from 'src/core/DijkstraPathFinder'
@@ -97,6 +101,7 @@ async function findPathDelay (delay = 10) {
 
 // ----------------------------------------------------------------------------【state】
 const state = () => ({
+  filePath: '', // 当前打开的文件路径
   xGrids: 100, // 横向格数
   yGrids: 100, // 纵向格数
   gridSize: 20, // 格子边长
@@ -324,6 +329,7 @@ const getters = {
 // ----------------------------------------------------------------------------【mutations】
 const mutations = {
   ...genMutations([
+    'filePath',
     'xGrids',
     'yGrids',
     'gridSize',
@@ -424,33 +430,93 @@ const actions = {
   },
 
   // 加载格子状态
-  async loadGrids ({ commit, dispatch }) {
-    const info = LocalStorage.getItem('FindPathGrids-1')
-    if (info) {
-      const [w, h] = info.size
-      const states = await dispatch('dataURLToGridStates', info.states)
-      commit('xGrids', w)
-      commit('yGrids', h)
-      await dispatch('clearGrids', true)
-      commit('gridStates', states)
-      setTimeout(notify, 100, '加载完成')
-    } else {
-      showMsg('加载失败！')
+  async loadGrids ({ state, commit, dispatch }) {
+    const { canceled = true, filePaths } =
+      (await dlgPost('showOpenDialog', {
+        title: '打开网格数据文件',
+        filters: JSON_FILE_FILTERS,
+        defaultPath: state.filePath
+      })) || {}
+    if (canceled) return
+    const filePath = filePaths[0]
+
+    // 加载文件
+    commit('main/loading', '正在加载，请稍候...', ROOT)
+    await sleep(200)
+    let data
+    try {
+      data = await loadJson(filePath)
+      assert(data != null, '无法加载文件！')
+    } catch (e) {
+      commit('main/loading', false, ROOT)
+      return showMsg('读取网格数据失败！<br>' + e.message)
     }
+
+    // 读取网格数据
+    const [w, h] = data.size
+    let states
+    if (data.states instanceof Array) {
+      states = new Map()
+      data.states.forEach(
+        (s, i) => s && states.set(PathNode.xyToId(i % w, Math.floor(i / w)), s)
+      )
+    } else {
+      states = await dispatch('dataURLToGridStates', data.states)
+    }
+    commit('xGrids', w)
+    commit('yGrids', h)
+    await dispatch('clearGrids', true)
+    commit('gridStates', states)
+    commit('filePath', filePath)
+    commit('main/loading', false, ROOT)
+    notify('加载完成')
   },
 
   // 保存格子状态
-  async saveGrids ({ state, dispatch }) {
-    LocalStorage.set('FindPathGrids-1', {
+  async saveGrids ({ state, commit, dispatch }) {
+    const { canceled = true, filePath } =
+      (await dlgPost('showSaveDialog', {
+        title: '保存网格数据为',
+        filters: JSON_FILE_FILTERS,
+        defaultPath: state.filePath
+      })) || {}
+    if (canceled) return null
+
+    // 生成数据
+    commit('main/loading', '正在保存，请稍候...', ROOT)
+    await sleep(200)
+    const data = JSON.stringify({
       size: [state.xGrids, state.yGrids],
       states: await dispatch('gridStatesToDataURL')
     })
+
+    // 保存文件
+    const success = await utilPost('saveFile', filePath, data)
+    if (!success) {
+      commit('main/loading', false, ROOT)
+      return showMsg('保存失败！')
+    }
+    commit('filePath', filePath)
+    commit('main/loading', false, ROOT)
     notify('保存成功')
   },
 
   // 复制格子状态
-  async copyGrids ({ dispatch }) {
-    setClipboardText(await dispatch('gridStatesToDataURL'))
+  async copyGrids ({ state, commit }) {
+    const { xGrids, yGrids, gridStates } = state
+    const size = [xGrids, yGrids]
+
+    commit('main/loading', '正在复制，请稍候...', ROOT)
+    await sleep(200)
+    const states = []
+    for (let y = 0; y < yGrids; y++) {
+      for (let x = 0; x < xGrids; x++) {
+        states.push(gridStates.get(PathNode.xyToId(x, y)) || 0)
+      }
+    }
+    setClipboardJson({ size, states })
+    commit('main/loading', false, ROOT)
+
     notify('已复制到剪贴板')
   },
 
@@ -633,7 +699,7 @@ const actions = {
       const { pathStates, pathDirty } = state
       const newDirty = pathDirty === 'all' ? null : pathDirty || new Map()
       path.forEach(node => {
-        pathStates.set(node.id, 200 + (pathStates.get(node.id) || 1) % 100)
+        pathStates.set(node.id, 200 + ((pathStates.get(node.id) || 1) % 100))
         newDirty && newDirty.set(node.id, true)
       })
       if (newDirty && newDirty !== pathDirty) {

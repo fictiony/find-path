@@ -112,9 +112,9 @@ export default {
       const all = this.gridDirty === 'all'
       const dirtyArea = all ? this.gridStates : this.gridDirty
       this.gridDirty = null
-      const tm = Date.now()
+      // const tm = Date.now()
       this.refreshDirtyArea(this.$refs.grid, this.gridImageData, this.gridStates, dirtyArea, all, gridToColor)
-      all && console.log('用时', Date.now() - tm)
+      // all && console.log('用时', Date.now() - tm)
     },
     refreshDirtyGridLater: debounce(function () {
       this.refreshDirtyGrid()

@@ -173,20 +173,20 @@ export default {
     ],
     editMenu: [
       {
-        label: '加载网格',
+        label: '加载网格数据',
         icon: 'upload',
         shortcut: 'Ctrl+L',
         handler: vm.loadGrids
       },
       {
-        label: '保存网格',
+        label: '保存网格数据',
         icon: 'download',
         shortcut: 'Ctrl+S',
         handler: vm.saveGrids
       },
       null,
       {
-        label: '复制网格',
+        label: '复制网格数据',
         icon: 'content_copy',
         shortcut: 'Ctrl+C',
         handler: vm.copyGrids

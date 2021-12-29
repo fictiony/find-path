@@ -788,7 +788,6 @@ if (ELECTRON) {
       case 'unmaximize':
         return Vue.store.commit('main/maximized', type === 'maximize')
       case 'before-quit':
-        // return Vue.store.dispatch('file/tryQuit')
         return appCall('exit')
     }
   })
@@ -813,10 +812,9 @@ function ipcCall (mode, target, method, ...args) {
     }
 
     // 网页版模拟接口
-    console.log(`[${target}-${mode}] ${method}:`, ...args)
+    // console.log(`[${target}-${mode}] ${method}:`, ...args)
     switch (method) {
       case 'quit':
-        // return wrapResult(Vue.store.dispatch('file/tryQuit'))
         return wrapResult(appCall('exit'))
       case 'exit':
         return wrapResult(window.close())
@@ -827,20 +825,20 @@ function ipcCall (mode, target, method, ...args) {
       case 'showOpenDialog':
         return wrapResult({
           canceled: false,
-          filePaths: ['tempFile']
+          filePaths: ['FindPathGrids-1']
         })
       case 'showSaveDialog':
         return wrapResult({
           canceled: false,
-          filePath: 'tempFile'
+          filePath: 'FindPathGrids-1'
         })
       case 'loadFile':
-        if (!['tempFile'].includes(args[0])) {
+        if (!['FindPathGrids-1'].includes(args[0])) {
           return wrapResult(axios.get(...args).then(res => res.data))
         }
         return wrapResult(LocalStorage.getItem(...args))
       case 'saveFile':
-        if (!['tempFile'].includes(args[0])) break
+        if (!['FindPathGrids-1'].includes(args[0])) break
         LocalStorage.set(...args)
         return wrapResult(true)
     }
